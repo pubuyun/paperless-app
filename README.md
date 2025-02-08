@@ -1,5 +1,5 @@
 # paperless-app
-an app for ai assisted learning\
+an app for ai assisted learning
 
 ## planned features
 #### AI
