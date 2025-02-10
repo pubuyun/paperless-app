@@ -1,0 +1,19 @@
+.resizable-panel {
+    height: 100%;
+    position: relative;
+    background-color: var(--background-resizable-panel);
+  }
+  
+  .resizer {
+    width: 4px;
+    height: 100%;
+    position: absolute;
+    right: -2px;
+    top: 0;
+    cursor: ew-resize;
+    background-color: transparent;
+  }
+  
+  .resizer:hover {
+    background-color: var(--resizer-hover);
+  }
