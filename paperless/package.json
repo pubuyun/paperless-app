@@ -1,0 +1,43 @@
+{
+  "name": "paperless",
+  "productName": "paperless",
+  "version": "1.0.0",
+  "description": "an app to assist learning by AI",
+  "main": ".webpack/main",
+  "scripts": {
+    "start": "electron-forge start",
+    "package": "electron-forge package",
+    "make": "electron-forge make",
+    "publish": "electron-forge publish",
+    "lint": "echo \"No linting configured\""
+  },
+  "devDependencies": {
+    "@electron-forge/cli": "^7.6.1",
+    "@electron-forge/maker-deb": "^7.6.1",
+    "@electron-forge/maker-rpm": "^7.6.1",
+    "@electron-forge/maker-squirrel": "^7.6.1",
+    "@electron-forge/maker-zip": "^7.6.1",
+    "@electron-forge/plugin-auto-unpack-natives": "^7.6.1",
+    "@electron-forge/plugin-fuses": "^7.6.1",
+    "@electron-forge/plugin-webpack": "^7.6.1",
+    "@electron/fuses": "^1.8.0",
+    "@vercel/webpack-asset-relocator-loader": "1.7.3",
+    "css-loader": "^6.0.0",
+    "electron": "34.1.1",
+    "node-loader": "^2.0.0",
+    "style-loader": "^3.0.0"
+  },
+  "keywords": [],
+  "author": {
+    "name": "pubuyun",
+    "email": "s24425.zhang@stu.scie.com.cn"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pubuyun/paperless-app.git"
+  },
+  "license": "GPL-3.0-only",
+  "dependencies": {
+    "electron-squirrel-startup": "^1.0.1"
+  }
+}
