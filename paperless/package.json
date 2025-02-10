@@ -38,6 +38,7 @@
   },
   "license": "GPL-3.0-only",
   "dependencies": {
+    "electron-debug": "^4.1.0",
     "electron-squirrel-startup": "^1.0.1"
   }
 }

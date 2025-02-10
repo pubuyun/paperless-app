@@ -1,8 +1,12 @@
 import { app, BrowserWindow } from 'electron';
 import path from 'node:path';
 import started from 'electron-squirrel-startup';
+import debug from 'electron-debug';
 
-// Handle creating/removing shortcuts on Windows when installing/uninstalling.
+if (process.env.NODE_ENV === 'development') {
+  debug();
+}
+
 if (started) {
   app.quit();
 }
@@ -20,8 +24,13 @@ const createWindow = () => {
   // and load the index.html of the app.
   mainWindow.loadURL(MAIN_WINDOW_WEBPACK_ENTRY);
 
-  // Open the DevTools.
-  mainWindow.webContents.openDevTools();
+  // toggle dev tools by pressing f12
+  mainWindow.webContents.on('before-input-event', (event, input) => {
+    if (input.control && input.key.toLowerCase() === 'a') {
+      event.preventDefault();
+      mainWindow.webContents.toggleDevTools();
+    }
+  });
 };
 
 // This method will be called when Electron has finished
