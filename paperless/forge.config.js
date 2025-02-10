@@ -41,7 +41,7 @@ module.exports = {
               js: './src/renderer/renderer.js',
               name: 'main_window',
               preload: {
-                js: './src/main/preload.js',
+                js: './src/renderer/preload.js',
               },
             },
           ],
@@ -59,5 +59,6 @@ module.exports = {
       [FuseV1Options.EnableEmbeddedAsarIntegrityValidation]: true,
       [FuseV1Options.OnlyLoadAppFromAsar]: true,
     }),
+    
   ],
 };
