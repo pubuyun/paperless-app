@@ -1,0 +1,21 @@
+.sidebar-button {
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    color: var(--color-text);
+    cursor: pointer;
+    transition: background-color 0.2s;
+  }
+  
+  .sidebar-button:hover {
+    background-color: var(--color-hover);
+  }
+  
+  .sidebar-button.active {
+    color: var(--color-primary);
+    background-color: var(--color-active);
+  }

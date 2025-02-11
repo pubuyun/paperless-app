@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import CloseIcon from '@mui/icons-material/Close';
-import './TabPanel.css';
+import './Context.css';
 
 interface TabPanelItem {
   id: string;
