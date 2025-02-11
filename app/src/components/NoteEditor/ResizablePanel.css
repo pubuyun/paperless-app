@@ -1,7 +1,7 @@
 .resizable-panel {
     height: 100%;
     position: relative;
-    background-color: var(--background-resizable-panel);
+    background-color: var(--color-secondary-light);
   }
   
   .resizer {
@@ -15,5 +15,5 @@
   }
   
   .resizer:hover {
-    background-color: var(--resizer-hover);
+    background-color: var(--color-teritary);
   }

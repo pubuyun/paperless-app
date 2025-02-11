@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import Sidebar from './components/Sidebar';
-import ResizablePanel from './components/ResizablePanel';
-import TabPanel from './components/TabPanel';
+import ResizablePanel from './components/NoteEditor/ResizablePanel';
+import TabPanel from './components/NoteEditor/TabPanel';
 import './themes/default.css';
 import './App.css';
 

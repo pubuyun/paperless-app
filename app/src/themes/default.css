@@ -1,49 +1,10 @@
 :root {
-    /* 基础颜色 */
-    --color-primary: #007fd4;
-    
-    /* 背景颜色 */
-    --background-default: #1e1e1e;
-    --background-paper: #252526;
-    --background-sidebar: #333333;
-    --background-resizable-panel: #252526;
-    --background-tab-panel: #1e1e1e;
-    
-    /* 文本颜色 */
-    --text-primary: #ffffff;
-    --text-secondary: #858585;
-    
-    /* 侧边栏 */
-    --sidebar-icon-active: #ffffff;
-    --sidebar-icon-inactive: #858585;
-    --sidebar-hover-bg: #2a2d2e;
-    
-    /* 分隔条 */
-    --resizer-hover: #007fd4;
-    
-    /* 标签页 */
-    --tabs-active: #1e1e1e;
-    --tabs-inactive: #2d2d2d;
-    --tabs-background: #252526;
-    --tabs-hover: #2a2d2e;
-  }
-  
-  /* 浅色主题 */
-  [data-theme="light"] {
-    --color-primary: #0078d4;
-    --background-default: #ffffff;
-    --background-paper: #f3f3f3;
-    --background-sidebar: #f3f3f3;
-    --background-resizable-panel: #f3f3f3;
-    --background-tab-panel: #ffffff;
-    --text-primary: #333333;
-    --text-secondary: #6e6e6e;
-    --sidebar-icon-active: #333333;
-    --sidebar-icon-inactive: #6e6e6e;
-    --sidebar-hover-bg: #e8e8e8;
-    --resizer-hover: #0078d4;
-    --tabs-active: #ffffff;
-    --tabs-inactive: #ececec;
-    --tabs-background: #f3f3f3;
-    --tabs-hover: #e8e8e8;
+    --color-primary: #222222; /* color of text */
+    --color-primary-light: #444444; /* color of text lighter */
+    --color-secondary: #dddddd; /* color of background */
+    --color-secondary-light: #eeeeee; /* color of background lighter */
+    --color-teritary: #66ccff; /* theme color */
+    --color-quanternary: #0078d4; /* theme color 2*/
+    --color-active: #333333; /* color of active elements */
+    --color-inactive: #999999; /* color of inactive elements */
   }

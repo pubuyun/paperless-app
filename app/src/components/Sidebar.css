@@ -1,6 +1,6 @@
 .sidebar {
     width: 48px;
-    background-color: var(--background-sidebar);
+    background-color: var(--color-secondary);
     height: 100%;
     display: flex;
     flex-direction: column;
@@ -14,7 +14,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    color: var(--sidebar-icon-inactive);
+    color: var(--color-inactive);
     background: none;
     border: none;
     cursor: pointer;
@@ -23,10 +23,10 @@
   }
   
   .sidebar-button:hover {
-    color: var(--sidebar-icon-active);
-    background-color: var(--sidebar-hover-bg);
+    color: var(--color-active);
+    background-color: var(--color-teritary);
   }
   
   .sidebar-button.active {
-    color: var(--sidebar-icon-active);
+    color: var(--color-active);
   }
