@@ -1,10 +1,12 @@
 :root {
-    --color-primary: #222222; /* color of text */
-    --color-primary-light: #444444; /* color of text lighter */
-    --color-secondary: #dddddd; /* color of background */
-    --color-secondary-light: #eeeeee; /* color of background lighter */
+    --color-primary-dark: #000000; 
+    --color-primary: #363636; /* color of text */
+    --color-primary-light: #666666; /* color of text lighter, used for inactive */
+    --color-secondary-dark: #dddddd; /* color of background hover */
+    --color-secondary: #eeeeee; /* color of background except content area */
+    --color-secondary-light: #ffffff; /* color of background content area */
     --color-teritary: #66ccff; /* theme color */
-    --color-quanternary: #0078d4; /* theme color 2*/
+    --color-quanternary: #0078d4; /* theme color 2, should be darker than teritary*/
     --color-active: #333333; /* color of active elements */
     --color-inactive: #999999; /* color of inactive elements */
   }

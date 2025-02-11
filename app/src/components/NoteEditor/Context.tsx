@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import CloseIcon from '@mui/icons-material/Close';
 import Tiptap from './Editor';
-import './Context.css';
+import './Context.scss';
 
 interface TabPanelItem {
   id: string;

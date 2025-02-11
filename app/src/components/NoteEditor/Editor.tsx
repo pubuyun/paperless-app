@@ -1,17 +1,42 @@
-import { EditorProvider, FloatingMenu, BubbleMenu } from '@tiptap/react'
-import StarterKit from '@tiptap/starter-kit'
+import CharacterCount from '@tiptap/extension-character-count'
+import Highlight from '@tiptap/extension-highlight'
+import TaskItem from '@tiptap/extension-task-item'
+import TaskList from '@tiptap/extension-task-list'
+import { EditorContent, useEditor } from '@tiptap/react'
 
-const extensions = [StarterKit]
-interface TiptapProps { 
-  content: string;
+import StarterKit from '@tiptap/starter-kit'
+import '../../themes/editor.scss'
+import { Color } from '@tiptap/extension-color'
+// editor.chain().focus().setColor('#958DF1').run()
+import Block from '@uiw/react-color-block';
+
+
+import MenuBar from './Tiptap/MenuBar'
+
+interface TiptapProps {
+  content: string
 }
-const Tiptap:React.FC<TiptapProps> = ({content}) => {
+
+export default function Tiptap({content=''} : TiptapProps) {
+  const editor = useEditor({
+    extensions: [
+      StarterKit.configure(),
+      Highlight,
+      TaskList,
+      TaskItem,
+      CharacterCount.configure({
+      }),
+      Color,
+    ],
+  })
+
   return (
-    <EditorProvider extensions={extensions} content={content}>
-      <FloatingMenu editor={null}>Type / to browse options</FloatingMenu>
-      <BubbleMenu editor={null}>bubble menu</BubbleMenu>
-    </EditorProvider>
+    <div className="editor">
+      {editor && <MenuBar editor={editor} />}
+      <EditorContent className="editor__content" editor={editor} content={content} />
+      <div className="editor__footer">
+        {editor?.storage.characterCount.characters()} characters  {editor?.storage.characterCount.words()} words
+      </div>
+    </div>
   )
 }
-
-export default Tiptap
