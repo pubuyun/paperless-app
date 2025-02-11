@@ -1,4 +1,5 @@
 import { ComponentConfig } from '../types/config';
+import * as MuiIcons from '@mui/icons-material';
 
 export async function loadConfigs(): Promise<ComponentConfig[]> {
   const configs: ComponentConfig[] = [];
@@ -39,8 +40,6 @@ export async function importComponent(componentPath: string) {
 
   return modules[matchingPath]();
 }
-export async function getIconComponent(iconName: string) {
-  // get the icon from mui icons
-    const icon = import(`@mui/icons-material/${iconName}`);
-    return icon;
+export function getIconComponent(iconName: string) {
+  return (MuiIcons as Record<string, React.ComponentType>)[iconName] || MuiIcons.Help;
 }

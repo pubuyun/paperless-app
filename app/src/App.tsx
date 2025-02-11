@@ -4,20 +4,17 @@ import { loadConfigs } from './utils/loader';
 import { ComponentConfig } from './types/config';
 import './themes/default.css';
 import './App.css';
-import config from './components/NoteEditor/config';
 
 const App: React.FC = () => {
-
   const [configs, setConfigs] = useState<ComponentConfig[]>([]);
   const [activeView, setActiveView] = useState<string>('explorer');
-  const [colorMode, setMode] = useState<'dark' | 'light'>('dark');
+  // const [colorMode, setMode] = useState<'dark' | 'light'>('dark');
   useEffect(() => {
     loadConfigs().then(setConfigs);
   }, []);
-  const [ActivePanel, setActivePanel] = useState<ComponentType>();
-  const [ActiveContext, setActiveContext] = useState<ComponentType>();
-  
-  setActiveView(config[0].id);
+  const [ActivePanel, setActivePanel] = useState<ComponentType>(() => () => <div>Loading panel...</div>);
+  const [ActiveContext, setActiveContext] = useState<ComponentType>(() => () => <div>Loading context...</div>);
+  useEffect(() => {setActiveView("NoteEditor");}, []);
   useEffect(() => {
     const activeConfig = configs.find(config => config.id === activeView);
     
@@ -25,14 +22,14 @@ const App: React.FC = () => {
       // Load panel component
       const PanelComponent = lazy(() => {
         // @vite-ignore
-        return import(activeConfig.panelComponent)
+        return import(`./components/${activeConfig.id}/${activeConfig.panelComponent}.tsx`)
           .then(module => ({ default: module.default || module }));
       });
       
       // Load context component
       const ContextComponent = lazy(() => {
         // @vite-ignore
-        return import(activeConfig.contextComponent)
+        return import(`./components/${activeConfig.id}/${activeConfig.contextComponent}.tsx`)
           .then(module => ({ default: module.default || module }));
       });
 
@@ -40,16 +37,11 @@ const App: React.FC = () => {
       setActiveContext(() => ContextComponent);
     }
   }, [activeView, configs]);
-
-  const toggleDarkmode = () => {
-    const newMode = colorMode === 'dark' ? 'light' : 'dark';
-    setMode(newMode);
-    document.documentElement.setAttribute('data-theme', newMode);
-  };
-
-  const activeConfig = configs.find(config => config.id === activeView);
-  
-  
+  // const toggleDarkmode = () => {
+  //   const newMode = colorMode === 'dark' ? 'light' : 'dark';
+  //   setMode(newMode);
+  //   document.documentElement.setAttribute('data-theme', newMode);
+  // };
 
   return (
     <div className="app-container">

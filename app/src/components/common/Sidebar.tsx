@@ -1,4 +1,4 @@
-import React, {lazy} from 'react';
+import React, {} from 'react';
 import { ComponentConfig } from '../../types/config';
 import { getIconComponent } from '../../utils/loader';
 import './Sidebar.css';
@@ -13,7 +13,7 @@ const Sidebar: React.FC<SidebarProps> = ({ configs, activeView, onViewChange }) 
   return (
     <div className="sidebar">
       {configs.map((config) => {
-        const IconComponent = lazy(() => getIconComponent(config.button.icon));
+        const IconComponent = getIconComponent(config.button.icon);
 
         return (
           <button

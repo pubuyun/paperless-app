@@ -14,7 +14,8 @@
     "@emotion/styled": "^11.14.0",
     "@mui/icons-material": "^6.4.3",
     "@mui/material": "^6.4.3",
-    "electron-debug": "^4.1.0",
+    "@tiptap/react": "^2.11.5",
+    "@tiptap/starter-kit": "^2.11.5",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },
@@ -26,6 +27,7 @@
     "@vitejs/plugin-react": "^4.2.1",
     "electron": "^30.0.1",
     "electron-builder": "^24.13.3",
+    "electron-debug": "^4.1.0",
     "eslint": "^8.57.0",
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-react-refresh": "^0.4.5",

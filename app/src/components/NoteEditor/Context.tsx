@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import CloseIcon from '@mui/icons-material/Close';
+import Tiptap from './Editor';
 import './Context.css';
 
 interface TabPanelItem {
@@ -43,7 +44,7 @@ const TabPanel: React.FC = () => {
         ))}
       </div>
       <div className="tab-content">
-        {tabs.find(tab => tab.id === activeTab)?.content}
+        <Tiptap content={tabs.find(tab => tab.id === activeTab)?.content || ''} />
       </div>
     </div>
   );
