@@ -31,7 +31,7 @@ function MenuItemColorPicker({ icon, title, editor }: MenuItemColorPickerProps) 
   const handleButtonClick = () => {
     if (showPicker) {
       // If picker is already shown, clicking the button again will reset the color
-      editor.chain().focus().unsetColor().run();
+      // editor.chain().focus().unsetColor().run();
       setCurrentColor('');
     } else {
       setShowPicker(true);
@@ -39,7 +39,7 @@ function MenuItemColorPicker({ icon, title, editor }: MenuItemColorPickerProps) 
   };
 
   const handleColorChange = (color: { hex: string }) => {
-    editor.chain().focus().setColor(color.hex).run();
+    // editor.chain().focus().setColor(color.hex).run();
     setCurrentColor(color.hex);
   };
 
