@@ -1428,7 +1428,12 @@ app$1.on("activate", () => {
     createWindow();
   }
 });
-app$1.whenReady().then(createWindow);
+app$1.on(
+  "ready",
+  () => {
+    createWindow();
+  }
+);
 export {
   MAIN_DIST,
   RENDERER_DIST,

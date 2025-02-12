@@ -59,7 +59,7 @@ const TabPanel: React.FC = () => {
           ))}
         </Tabs>
       </Box>
-      <Box sx={{height: 'calc(100vh - 56px)', overflow: 'auto'}}>
+      <Box>
         {tabs.map(tab => (
           <Box
             key={tab.id}
