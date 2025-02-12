@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Tabs, Tab, Box, IconButton } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import Tiptap from './Editor';
 import './Context.scss';
@@ -16,6 +17,10 @@ const TabPanel: React.FC = () => {
   ]);
   const [activeTab, setActiveTab] = useState('1');
 
+  const handleTabChange = (event: React.SyntheticEvent, newValue: string) => {
+    setActiveTab(newValue);
+  };
+
   const handleTabClose = (event: React.MouseEvent, tabId: string) => {
     event.stopPropagation();
     setTabs(tabs.filter(tab => tab.id !== tabId));
@@ -25,28 +30,51 @@ const TabPanel: React.FC = () => {
   };
 
   return (
-    <div className="tab-container">
-      <div className="tabs-header">
+    <Box sx={{ width: '100%' }}>
+      <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+        <Tabs
+          value={activeTab}
+          onChange={handleTabChange}
+          variant="scrollable"
+          scrollButtons="auto"
+          aria-label="scrollable tabs"
+        >
+          {tabs.map(tab => (
+            <Tab
+              key={tab.id}
+              value={tab.id}
+              label={
+                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                  {tab.title}
+                  <IconButton
+                    size="small"
+                    onClick={(e) => handleTabClose(e, tab.id)}
+                    sx={{ ml: 1 }}
+                  >
+                    <CloseIcon fontSize="small" />
+                  </IconButton>
+                </Box>
+              }
+            />
+          ))}
+        </Tabs>
+      </Box>
+      <Box sx={{height: 'calc(100vh - 56px)', overflow: 'auto'}}>
         {tabs.map(tab => (
-          <button
+          <Box
             key={tab.id}
-            className={`tab ${activeTab === tab.id ? 'active' : ''}`}
-            onClick={() => setActiveTab(tab.id)}
+            role="tabpanel"
+            hidden={activeTab !== tab.id}
+            id={`tabpanel-${tab.id}`}
+            aria-labelledby={`tab-${tab.id}`}
           >
-            {tab.title}
-            <button
-              className="close-button"
-              onClick={(e) => handleTabClose(e, tab.id)}
-            >
-              <CloseIcon fontSize="small" />
-            </button>
-          </button>
+            {activeTab === tab.id && (
+              <Tiptap content={tab.content} />
+            )}
+          </Box>
         ))}
-      </div>
-      <div className="tab-content">
-        <Tiptap content={tabs.find(tab => tab.id === activeTab)?.content || ''} />
-      </div>
-    </div>
+      </Box>
+    </Box>
   );
 };
 

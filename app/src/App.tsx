@@ -4,6 +4,7 @@ import { loadConfigs } from './utils/loader';
 import { ComponentConfig } from './types/config';
 import './themes/default.css';
 import './App.css';
+import { Box } from '@mui/material';
 
 const App: React.FC = () => {
   const [configs, setConfigs] = useState<ComponentConfig[]>([]);
@@ -44,7 +45,7 @@ const App: React.FC = () => {
   // };
 
   return (
-    <div className="app-container">
+    <Box className="app-container">
       <Sidebar
         configs={configs}
         activeView={activeView}
@@ -54,7 +55,7 @@ const App: React.FC = () => {
         <ActivePanel />
         <ActiveContext />
       </Suspense>
-    </div>
+    </Box>
   );
 };
 

@@ -1,7 +1,7 @@
 .resizable-panel {
     height: 100%;
     position: relative;
-    background-color: var(--color-secondary-light);
+    background-color: var(--color-secondary);
   }
   
   .resizer {

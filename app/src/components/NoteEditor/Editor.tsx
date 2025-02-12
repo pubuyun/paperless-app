@@ -8,8 +8,7 @@ import StarterKit from '@tiptap/starter-kit'
 import '../../themes/editor.scss'
 import { Color } from '@tiptap/extension-color'
 // editor.chain().focus().setColor('#958DF1').run()
-import Block from '@uiw/react-color-block';
-
+import TextStyle from '@tiptap/extension-text-style'
 
 import MenuBar from './Tiptap/MenuBar'
 
@@ -27,6 +26,7 @@ export default function Tiptap({content=''} : TiptapProps) {
       CharacterCount.configure({
       }),
       Color,
+      TextStyle,
     ],
   })
 
