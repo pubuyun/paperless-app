@@ -28,41 +28,7 @@ ENGLISH LITERATURE
 Paper 2A Poetry and unseen texts
 Mark scheme
 November 2022
-Version: 1.0 Final
-*22BY9275/2A/MS*
-MARK SCHEME – INTERNATIONAL GCSE ENGLISH LITERATURE – 9275/2A – NOVEMBER 2022
-Mark schemes are prepared by the Lead Assessment Writer and considered, together with the relevant
-questions, by a panel of subject teachers. This mark scheme includes any amendments made at the
-standardisation events which all associates participate in and is the scheme which was used by them in
-this examination. The standardisation process ensures that the mark scheme covers the students’
-responses to questions and that every associate understands and applies it in the same correct way.
-As preparation for standardisation each associate analyses a number of students’ scripts. Alternative
-answers not already covered by the mark scheme are discussed and legislated for. If, after the
-standardisation process, associates encounter unusual answers which have not been raised they are
-required to refer these to the Lead Examiner.
-It must be stressed that a mark scheme is a working document, in many cases further developed and
-expanded on the basis of students’ reactions to a particular paper. Assumptions about future mark
-schemes on the basis of one year’s document should be avoided; whilst the guiding principles of
-assessment remain constant, details will change, depending on the content of a particular examination
-paper.
-Further copies of this mark scheme are available from oxfordaqaexams.org.uk
-Copyright information
-OxfordAQA retains the copyright on all its publications. However, registered schools/colleges for OxfordAQA are permitted to copy material from this booklet for
-their own internal use, with the following important exception: OxfordAQA cannot give permission to schools/colleges to photocopy any material that is
-acknowledged to a third party even for internal use within the centre.
-Copyright © 2022 Oxford International AQA Examinations and its licensors. All rights reserved.
-2
-MARK SCHEME – INTERNATIONAL GCSE ENGLISH LITERATURE – 9275/2A – NOVEMBER 2022
-Statement of importance
-International GCSE English Literature is the study of how writers communicate their ideas about the
-world, and how readers might respond to these ideas. It aims to develop a critical understanding of the
-ways in which literary texts are a reflection of, and exploration of, the human condition, the study of
-which develops empathic understanding of human nature. High-quality English literature is writing which
-displays recognisable literary qualities and, although shaped by particular contexts, transcends them and
-speaks about the universality of the human condition. International GCSE English Literature aims to
-enable students to appreciate these qualities, developing and presenting informed, critical responses to
-the ideas in literary texts and the ways writers present these ideas. It aims to enable students to make
-links between a variety of written texts and between the text and the context within which it was shaped.
+
 Principles of mark scheme construction
 Each mark scheme is driven by the task and by the statement of importance about International GCSE
 English Literature. It aims to do two things:
@@ -80,8 +46,7 @@ will have parity with the level of response to the methods of communicating thos
 The specification takes a skills-based approach to the study of International English Literature that is
 consistent across the genres. All three AOs follow the same weighting in each component. This
 coherent approach to the study of the subject means that AOs support learning rather than dominate it.
-3
-MARK SCHEME – INTERNATIONAL GCSE ENGLISH LITERATURE – 9275/2A – NOVEMBER 2022
+
 Level of response marking instructions
 Level of response mark schemes are broken down into levels, each of which has a descriptor. The
 descriptor for the level shows the average performance for the level. There are marks in each level.
@@ -148,155 +113,204 @@ each response in terms of a final mark.
 Exemplification documents, including indicative content, definitions of key descriptors in the mark
 scheme and exemplification of these descriptors, provide more detailed guidance to examiners on how
 to judge the relative qualities and skills being demonstrated by each candidate.
+
 Assessment objectives (AOs)
 AO1 Understanding of, and engagement with, themes, ideas and contexts.
 AO2 Analysis of how writers create meanings and effects.
 AO3 Express informed, personal responses to literary texts, using appropriate
 terminology, and coherent, accurate writing.
 
+---
 Paper 2 Route A Questions 1–4; Route B Questions 1–3 (30 marks – AO1=12, AO2=12, AO3=6)
 AO1: Understanding of, and engagement with, themes, ideas and contexts – 40%
 AO2: Analysis of how writers create meanings and effects – 40%
 AO3: Express informed, personal responses to literary texts, using appropriate terminology, and coherent, accurate writing – 20%
-Mark AO Typical features How to arrive at a mark
-Level 6
-AO1 • exploration of themes/ideas/perspectives/contextual
+
+---
+Mark, AO, Typical features, How to arrive at a mark
+
+---
+Level 6 - 26–30 marks, Convincing,critical analysis and exploration
+
+AO1 
+• exploration of themes/ideas/perspectives/contextual
 factors shown by specific, detailed links between
 context/text/task
 • judicious use of precise references to support
 interpretation(s).
-Convincing,
-critical
-analysis and
-exploration
+
+AO2 
+• analysis of writer’s methods
+• exploration of effects of writer’s methods on reader.
+
+AO3 
+• critical, exploratory, conceptualised response to task
+and whole text.
+
 At the top of the level, a candidate’s response is likely to be a critical,
 exploratory, well-structured argument. It takes a conceptualised
 approach to the full task supported by a range of judicious references.
 There will be a fine-grained and insightful analysis of language and form
 and structure. Convincing exploration of one or more
 theme/idea/perspective/contextual factor/interpretation.
-AO2 • analysis of writer’s methods
-• exploration of effects of writer’s methods on reader.
-AO3 • critical, exploratory, conceptualised response to task
-and whole text.
-26–30 marks
+
 At the bottom of the level, a candidate will have Level 5 and be starting
 to demonstrate elements of exploratory thought and/or analysis of writer’s
 methods and /or contexts.
-Level 5
-AO1 Thoughtful,
-developed
-consideration
+
+---
+Level 5 - 21-25 marks, Thoughtful, developed consideration
+
+AO1 
 • thoughtful consideration of
 themes/ideas/perspectives/contextual factors shown
 by examination of detailed links between
 context/text/task
 • apt references integrated into interpretation(s).
+
+AO2 
+• examination of writer’s methods
+• consideration of effects of writer’s methods on
+reader.
+
+AO3 
+• thoughtful, developed response to task and whole
+text.
+
 At the top of the level, a candidate’s response is likely to be thoughtful,
 detailed and developed. It takes a considered approach to the full task
 with references integrated into interpretation; there will be a detailed
 examination of the effects of language and/or structure and/or form.
 Examination of themes/ideas/perspectives/contextual factors, possibly
 including alternative interpretations/deeper meanings.
-AO2 • examination of writer’s methods
-• consideration of effects of writer’s methods on
-reader.
-21–25 marks
-AO3 • thoughtful, developed response to task and whole
-text.
+
 At the bottom of the level, a candidate will have Level 4 and be starting
 to demonstrate elements of thoughtful consideration and/or examination
 of writer’s methods and/or contexts.
 
-Level 4
-Clear
-understanding
-16–20 marks
-Level 3
-Explained,
-structured
-comments
-11–15 marks
+---
+Level 4 - 16-20 marks, Clear understanding
 
-AO1 • clear understanding of themes/ideas/perspectives/
+AO1 
+• clear understanding of themes/ideas/perspectives/
 contextual factors shown by specific links between
 context/text/task
 • effective use of references to support explanation.
+
+AO2 
+• clear explanation of writer’s methods
+• understanding of effects of writer’s methods on
+reader.
+
+AO3 
+• clear, explained response to task and whole text.
+
 At the top of the level, a candidate’s response is likely to be clear,
 sustained and consistent. It takes a focused response to the full task
 which demonstrates clear understanding. It uses a range of references
 effectively to illustrate and justify explanation; there will be clear
 explanation of the effects of a range of writer’s methods. Clear
 understanding of themes/ideas/perspectives/contextual factors.
-AO2 • clear explanation of writer’s methods
-• understanding of effects of writer’s methods on
-reader.
-AO3 • clear, explained response to task and whole text.
+
 At the bottom of the level, a candidate will have Level 3 and be starting
 to demonstrate elements of understanding and/or explanation of writer’s
 methods and/or contexts.
-AO1 • some understanding of implicit themes/ideas/
+
+
+---
+Level 3 - 11-15 marks, Explained, Structured comments
+
+AO1 
+• some understanding of implicit themes/ideas/
 perspectives/contextual factors shown by links
 between context/text/task
 • references used to support a range of relevant
 comments.
+
+AO2 
+• explained/relevant comments on writer’s methods
+• identification of effects of writer’s methods on reader.
+
+AO3 
+• some explained response to task and whole text.
+
 At the top of the level, a candidate’s response is likely to be explanatory
 in parts. It focuses on the full task with a range of points exemplified by
 relevant references from the text; there will be identification of effects of a
 range of writer’s methods. Explanation of some relevant ideas/contextual
 factors.
-AO2 • explained/relevant comments on writer’s methods
-• identification of effects of writer’s methods on reader.
-AO3 • some explained response to task and whole text.
+
 At the bottom of the level, a candidate will have Level 2 and be starting
 to explain and/or make relevant comments on writer’s methods and/or
 contexts.
-Level 2
-Supported,
-relevant
-comments
-6–10 marks
-Level 1
-Simple,
-explicit
-comments
-1–5 marks
 
-AO1 • some awareness of implicit themes/ideas/contextual
+---
+Level 2 - 6-10 marks, Supported, relevant comments
+
+AO1 
+• some awareness of implicit themes/ideas/contextual
 factors
 • comments on references.
-AO2 • identification of writers’ methods
+
+AO2 
+• identification of writers’ methods
 • comments on effects of methods on reader.
-AO3 • supported response to task and text.
+
+AO3 
+• supported response to task and text.
+
 At the top of the level, a candidate’s response is likely to be relevant
 and supported by some explanation. It will include some focus on the
 task with relevant comments and some supporting references from the
 text. There will be identification of effects of deliberate choices made by
 writer. Awareness of some contextual factors.
+
 At the bottom of the level, a candidate’s response will have Level 1 and
 be starting to focus on the task and/or starting to show awareness of the
 writer making choices and/or awareness of contexts.
-AO1 • simple comment on explicit ideas/contextual factors
+
+---
+Level 1 - 1-5 marks, Simple, explicit comments
+
+AO1 
+• simple comment on explicit ideas/contextual factors
 • reference to relevant details.
+
+AO2 
+• awareness of writer making deliberate choices
+• simple comment on effect.
+
+AO3 
+• simple comments relevant to task and text.
+
 At the top of the level, a candidate’s response is likely to be narrative
 and/or descriptive in approach. It may include awareness of the task and
 provide appropriate reference to text; there will be simple identification of
 method. Simple comments/responses to context, usually explicit.
-AO2 • awareness of writer making deliberate choices
-• simple comment on effect.
-AO3 • simple comments relevant to task and text.
+
 At the bottom of the level, a candidate’s response will show some
 familiarity with the text.
 Nothing worthy of credit/nothing written
 
+---
+0 marks - nothing worthy of credit/nothing written
+---
+
+Examples:
+
 Section A: Poetry
+
+0|1
 Oxford AQA Poetry Anthology: People and Places
+
 Explore how poets present positive feelings for a person or place in This Morning and
 one other poem from People and Places.
 [30 marks]
-Indicative content
+
+Indicative content:
 Examiners are encouraged to reward any valid interpretations. Answers might, however, include
 some of the following:
+
 AO1
 • feelings about the beauty of a place, eg in At Castle Boterel or Below the Green Corrie
 • feelings about home, eg in Homeland or This Morning or Where I Come From
@@ -314,13 +328,16 @@ Examiners are looking to award the candidate’s proficiency in:
 • responding to the task
 • communicating their ideas.
 
+0|2
 Oxford AQA Poetry Anthology: People and Places
 Write about the ways that poets present moments of change in one or more poems from
 People and Places.
 [30 marks]
-Indicative content
+
+Indicative content:
 Examiners are encouraged to reward any valid interpretations. Answers might, however, include
 some of the following:
+
 AO1
 • moments about change in relationship with nature, eg in The Moment, Hurricane Hits England
 • moments about change in circumstance, eg in Blessing
@@ -340,13 +357,16 @@ Examiners are looking to award the candidate’s proficiency in:
 • communicating their ideas.
 
 
+0|3
 Section B: Unseen poetry
 William Wordsworth: Composed upon Westminster Bridge, September 3, 1802
 How does the poet present the view from Westminster Bridge?
 [30 marks]
-Indicative content
+
+Indicative content:
 Examiners are encouraged to reward any valid interpretations. Answers might, however, include
 some of the following:
+
 AO1
 • beauty of the view
 • admiration of effects of nature, eg sun
@@ -365,13 +385,17 @@ Examiners are looking to award the candidate’s proficiency in:
 • responding to the task
 • communicating their ideas.
 
+
+0|4
 Section C: Unseen prose (Route A/Paper 2A only)
 Roald Dahl: Charlie and the Chocolate Factory
 How does the writer present Charlie’s love of chocolate?
 [30 marks]
-Indicative content
+
+Indicative content:
 Examiners are encouraged to reward any valid interpretations. Answers might, however, include
 some of the following:
+
 AO1
 • Charlie’s actions, eg ‘press his nose against’
 • chocolate associated with birthday
@@ -388,6 +412,7 @@ Examiners are looking to award the candidate’s proficiency in:
 • organising their thoughts
 • responding to the task
 • communicating their ideas.
+---
 END OF RUBRIC
 
 Clarify any specific instructions or steps they want the system to follow to achieve the desired outcome.
@@ -512,7 +537,7 @@ completion = client.chat.completions.create(
     #store = True
     messages=[
         { "role": "developer", 
-          "content": metaPrompt,
+          "content": aqaPrompt,
         },
         {
             "role": "user",
