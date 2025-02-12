@@ -297,14 +297,20 @@ Nothing worthy of credit/nothing written
 ---
 
 Examples:
+
 Section A: Poetry
+
+0|1
 Oxford AQA Poetry Anthology: People and Places
+
 Explore how poets present positive feelings for a person or place in This Morning and
 one other poem from People and Places.
 [30 marks]
-Indicative content
+
+Indicative content:
 Examiners are encouraged to reward any valid interpretations. Answers might, however, include
 some of the following:
+
 AO1
 • feelings about the beauty of a place, eg in At Castle Boterel or Below the Green Corrie
 • feelings about home, eg in Homeland or This Morning or Where I Come From
@@ -322,13 +328,16 @@ Examiners are looking to award the candidate’s proficiency in:
 • responding to the task
 • communicating their ideas.
 
+0|2
 Oxford AQA Poetry Anthology: People and Places
 Write about the ways that poets present moments of change in one or more poems from
 People and Places.
 [30 marks]
-Indicative content
+
+Indicative content:
 Examiners are encouraged to reward any valid interpretations. Answers might, however, include
 some of the following:
+
 AO1
 • moments about change in relationship with nature, eg in The Moment, Hurricane Hits England
 • moments about change in circumstance, eg in Blessing
@@ -348,13 +357,16 @@ Examiners are looking to award the candidate’s proficiency in:
 • communicating their ideas.
 
 
+0|3
 Section B: Unseen poetry
 William Wordsworth: Composed upon Westminster Bridge, September 3, 1802
 How does the poet present the view from Westminster Bridge?
 [30 marks]
-Indicative content
+
+Indicative content:
 Examiners are encouraged to reward any valid interpretations. Answers might, however, include
 some of the following:
+
 AO1
 • beauty of the view
 • admiration of effects of nature, eg sun
@@ -373,13 +385,17 @@ Examiners are looking to award the candidate’s proficiency in:
 • responding to the task
 • communicating their ideas.
 
+
+0|4
 Section C: Unseen prose (Route A/Paper 2A only)
 Roald Dahl: Charlie and the Chocolate Factory
 How does the writer present Charlie’s love of chocolate?
 [30 marks]
-Indicative content
+
+Indicative content:
 Examiners are encouraged to reward any valid interpretations. Answers might, however, include
 some of the following:
+
 AO1
 • Charlie’s actions, eg ‘press his nose against’
 • chocolate associated with birthday
@@ -396,6 +412,7 @@ Examiners are looking to award the candidate’s proficiency in:
 • organising their thoughts
 • responding to the task
 • communicating their ideas.
+---
 END OF RUBRIC
 
 Clarify any specific instructions or steps they want the system to follow to achieve the desired outcome.
@@ -520,7 +537,7 @@ completion = client.chat.completions.create(
     #store = True
     messages=[
         { "role": "developer", 
-          "content": metaPrompt,
+          "content": aqaPrompt,
         },
         {
             "role": "user",
