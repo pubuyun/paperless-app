@@ -20,7 +20,7 @@ import { RichTreeView } from '@mui/x-tree-view/RichTreeView';
 import { treeItemClasses } from '@mui/x-tree-view/TreeItem';
 import { useTreeItem2 } from '@mui/x-tree-view/useTreeItem2';
 import {
-  TreeItem2Checkbox,
+  TreeItem2Checkbox,hy
   TreeItem2Content,
   TreeItem2IconContainer,
   TreeItem2Label,
