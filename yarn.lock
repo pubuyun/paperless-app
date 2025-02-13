@@ -2,28 +2,3 @@
 # yarn lockfile v1
 
 
-"@uiw/color-convert@2.3.4":
-  version "2.3.4"
-  resolved "https://registry.npmmirror.com/@uiw/color-convert/-/color-convert-2.3.4.tgz#0fb13362f789157253c1ec9499315c40e4c179d0"
-  integrity sha512-av3PvCeP8o4H2a81n+vJwEEv8qGnQNonfCTiH9kO/CMQR1BvhGYijduM7RJzgHaAaVpE01opjNICQRyEx5qKVg==
-
-"@uiw/react-color-block@^2.3.4":
-  version "2.3.4"
-  resolved "https://registry.npmmirror.com/@uiw/react-color-block/-/react-color-block-2.3.4.tgz#9e3d590d433f51ee87b8d558608c71fa8b6cee43"
-  integrity sha512-xtVy6ipO3aviUwRhUe+E3WGddYhUo1P7eESnJ3bMoM2LVkxaeI5BsvKea5DV1Zu4UB/5SsdYCxFY4P3OGoQFiA==
-  dependencies:
-    "@uiw/color-convert" "2.3.4"
-    "@uiw/react-color-editable-input" "2.3.4"
-    "@uiw/react-color-swatch" "2.3.4"
-
-"@uiw/react-color-editable-input@2.3.4":
-  version "2.3.4"
-  resolved "https://registry.npmmirror.com/@uiw/react-color-editable-input/-/react-color-editable-input-2.3.4.tgz#e41f6d3eb3401736dda2a26da0056dbb80dd69e3"
-  integrity sha512-Bbb+FJxCXJl6Z4mqJVh6WY6NXYAbKet91n7RXq6scOSLRj2zxzjzmEkWBgwoWaLZ9Efl8I7fiTksaImjQcMLZA==
-
-"@uiw/react-color-swatch@2.3.4":
-  version "2.3.4"
-  resolved "https://registry.npmmirror.com/@uiw/react-color-swatch/-/react-color-swatch-2.3.4.tgz#df061696062ef481cfb6872915b6eb6594a66fc8"
-  integrity sha512-tl0wsu58MUeWUaKwi7zBKSkgLqugUWEYMOHDtooUvd96/dox0aPrB8KjH7J/2SaxAZzqUNMEEumGwuD3cmI2iw==
-  dependencies:
-    "@uiw/color-convert" "2.3.4"
