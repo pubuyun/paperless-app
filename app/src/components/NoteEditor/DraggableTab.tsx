@@ -1,32 +1,45 @@
-import React from 'react';
-import { Draggable } from 'react-beautiful-dnd';
-import { Tab } from '@mui/material';
+import * as React from "react";
+import { Draggable } from "@hello-pangea/dnd";
+import { Tab } from "@mui/material";
 
 interface DraggableTabProps {
   id: string;
-  index: number;
   label: React.ReactNode;
   value: string;
+  index: number;
+  icon?: React.ReactElement;
+  onClick?: () => void
 }
 
-const DraggableTab: React.FC<DraggableTabProps> = ({ id, index, label, value }) => {
+export default function DraggableTab(props: DraggableTabProps) {
+  const { id, label, value, index, icon, onClick } = props;
+  
   return (
-    <Draggable draggableId={id} index={index} disableInteractiveElementBlocking>
+    <Draggable draggableId={id} index={index} disableInteractiveElementBlocking={true}>
       {(provided) => (
         <div
           ref={provided.innerRef}
           {...provided.draggableProps}
         >
+          <div {...provided.dragHandleProps}/>
           <Tab
             value={value}
             label={label}
-            {...provided.dragHandleProps}
-            sx={{ cursor: 'inherit' }}
+            icon={icon}
+            iconPosition="end"  
+            onClick={onClick}  
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              overflow: "hidden",
+              whiteSpace: "nowrap",
+              textOverflow: "ellipsis",
+              minWidth: "108px",
+              justifyContent: "space-between"
+            }}
           />
         </div>
       )}
     </Draggable>
   );
-};
-
-export default DraggableTab;
+}

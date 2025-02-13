@@ -4,33 +4,43 @@ import TabContext from '@mui/lab/TabContext';
 import TabList from '@mui/lab/TabList';
 import TabPanel from '@mui/lab/TabPanel';
 import CloseIcon from '@mui/icons-material/Close';
-import { DragDropContext, Droppable, DropResult, DroppableProvided } from 'react-beautiful-dnd';
+import { DragDropContext, Droppable, DropResult, DroppableProvided } from '@hello-pangea/dnd';
 import DraggableTab from './DraggableTab';
 import Tiptap from './Editor';
+import Stack from "@mui/material/Stack";
 import './Context.scss';
 
-interface TabPanelItem {
+interface tabInterface {
   id: string;
-  title: string;
+  label: string;
+  value: string;
   content: string;
 }
 
 const TabContainer: React.FC = () => {
-  const [tabs, setTabs] = useState<TabPanelItem[]>([
-    { id: '1', title: 'index.tsx', content: 'Content of index.tsx' },
-    { id: '2', title: 'styles.css', content: 'Content of styles.css' },
-  ]);
-  const [activeTab, setActiveTab] = useState('1');
+  const [tabs, setTabs] = React.useState<tabInterface[]>(
+    [...Array(55)].map((_, index) => ({
+      id: `${index + 1}`,
+      label: `Tab ${index + 1}`,
+      value: `${index + 1}`,
+      content: `Content ${index + 1}`
+    }))
+  );
+  const [activeTabValue, setactiveTabValue] = useState('1');
 
-  const handleTabChange = (event: React.SyntheticEvent, newValue: string) => {
-    setActiveTab(newValue);
+  const handleTabChange = (_event: React.SyntheticEvent, newValue: string) => {
+    setactiveTabValue(newValue);
+  };
+
+  const handleTabClick = (value: string) => {
+    setactiveTabValue(value);
   };
 
   const handleTabClose = (event: React.MouseEvent, tabId: string) => {
     event.stopPropagation();
     setTabs(tabs.filter(tab => tab.id !== tabId));
-    if (activeTab === tabId && tabs.length > 1) {
-      setActiveTab(tabs[0].id === tabId ? tabs[1].id : tabs[0].id);
+    if (activeTabValue === tabId && tabs.length > 1) {
+      setactiveTabValue(tabs[0].id === tabId ? tabs[1].id : tabs[0].id);
     }
   };
 
@@ -44,60 +54,57 @@ const TabContainer: React.FC = () => {
   };
 
   const renderTabList = (droppableProvided: DroppableProvided) => (
-    <TabList
-      onChange={handleTabChange}
-      aria-label="Editor tabs"
-      variant="scrollable"
-      sx={{ minHeight: 48 , minWidth: '100%' }}
+    <div
+      ref={droppableProvided.innerRef}
+      {...droppableProvided.droppableProps}
     >
-      {tabs.map((tab, index) => {
-        const label = (
-          <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            {tab.title}
-            <IconButton
-              size="small"
-              onClick={(e) => handleTabClose(e, tab.id)}
-              sx={{ ml: 1 }}
-            >
-              <CloseIcon fontSize="small" />
-            </IconButton>
-          </Box>
-        );
-
-        return (
-          <DraggableTab
-            key={tab.id}
-            id={tab.id}
-            index={index}
-            value={tab.id}
-            label={label}
-          />
-        );
-      })}
-      {droppableProvided?.placeholder}
-    </TabList>
-  );
-
-  return (
-    <Box sx={{ width: '100%' }}>
-      <TabContext value={activeTab}>
-        <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-          <DragDropContext onDragEnd={onDragEnd}>
-            <Droppable droppableId="1" direction="horizontal">
-              {(provided) => (
-                <div
-                  ref={provided.innerRef}
-                  {...provided.droppableProps}
-                  style={{ display: 'flex', overflow: 'auto' }}
+      <TabList
+        onChange={handleTabChange}
+        aria-label="Editor tabs"
+        variant="scrollable"
+        sx={{ minHeight: 48, minWidth: '100%' }}
+      onClick={(e: React.MouseEvent) => e.stopPropagation()}
+      >
+        {tabs.map((tab, index) => {
+          return (
+            <DraggableTab
+              key={tab.id}
+              id={tab.id}
+              label={tab.label}
+              icon={
+                <IconButton
+                  size="small"
+                  onClick={(event) => handleTabClose(event, tab.id)}
                 >
-                  {renderTabList(provided)}
-                </div>
-              )}
-            </Droppable>
-          </DragDropContext>
+                  <CloseIcon fontSize="small" />
+                </IconButton>
+              }
+              value={tab.value}
+              index={index}
+              onClick={() => handleTabClick(tab.value)}
+            />
+          );
+        })}
+      </TabList>
+      {droppableProvided?.placeholder}
+    </div>
+  );
+  return (
+    <Box sx={{ width: "100%", typography: "body1" }}>
+      <TabContext value={activeTabValue}>
+        <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
+          <Stack direction="column">
+            <DragDropContext onDragEnd={onDragEnd}>
+              <div>
+                <Droppable droppableId="tabs" direction="horizontal" >
+                  {renderTabList}
+                </Droppable>
+              </div>
+            </DragDropContext>
+          </Stack>
         </Box>
         {tabs.map((tab) => (
-          <TabPanel key={tab.id} value={tab.id}>
+          <TabPanel value={tab.value} key={tab.id}>
             <Tiptap content={tab.content} />
           </TabPanel>
         ))}

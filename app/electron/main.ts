@@ -1,4 +1,5 @@
-import { app, BrowserWindow } from 'electron'
+import { app, BrowserWindow, ipcMain } from 'electron'
+import { fileApi } from './fileApi'
 import { createRequire } from 'node:module'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
@@ -74,5 +75,15 @@ app.on('activate', () => {
 })
 app.on('ready', () => {
   createWindow()
-}
-)
+  
+  // Set up IPC handlers for file operations
+  ipcMain.handle('readFile', async (_, filePath) => await fileApi.readFile(filePath))
+  ipcMain.handle('writeFile', async (_, filePath, content) => await fileApi.writeFile(filePath, content))
+  ipcMain.handle('readDir', async (_, dirPath) => await fileApi.readDir(dirPath))
+  ipcMain.handle('stat', async (_, itemPath) => await fileApi.stat(itemPath))
+  ipcMain.handle('exists', async (_, itemPath) => await fileApi.exists(itemPath))
+  ipcMain.handle('mkdir', async (_, dirPath) => await fileApi.mkdir(dirPath))
+  ipcMain.handle('delete', async (_, itemPath) => await fileApi.delete(itemPath))
+  ipcMain.handle('rename', async (_, oldPath, newPath) => await fileApi.rename(oldPath, newPath))
+  ipcMain.handle('copy', async (_, src, dest) => await fileApi.copy(src, dest))
+})

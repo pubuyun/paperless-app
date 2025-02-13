@@ -1,11 +1,97 @@
-import electron, { BrowserWindow as BrowserWindow$1, app as app$1 } from "electron";
+import electron, { BrowserWindow as BrowserWindow$1, app as app$1, ipcMain } from "electron";
+import { promises } from "fs";
+import path from "path";
 import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";
-import path from "node:path";
+import path$1 from "node:path";
 import process$1 from "node:process";
 import require$$1 from "tty";
 import require$$1$1 from "util";
 import require$$0 from "os";
+const fileApi = {
+  async readFile(filePath) {
+    try {
+      return await promises.readFile(filePath, "utf-8");
+    } catch (error) {
+      throw new Error(`Failed to read file: ${error.message}`);
+    }
+  },
+  async writeFile(filePath, content) {
+    try {
+      await promises.writeFile(filePath, content, "utf-8");
+    } catch (error) {
+      throw new Error(`Failed to write file: ${error.message}`);
+    }
+  },
+  async readDir(dirPath) {
+    try {
+      const items = await promises.readdir(dirPath);
+      return items.map((item) => path.join(dirPath, item));
+    } catch (error) {
+      throw new Error(`Failed to read directory: ${error.message}`);
+    }
+  },
+  async stat(itemPath) {
+    try {
+      const stats = await promises.stat(itemPath);
+      return {
+        isFile: stats.isFile(),
+        isDirectory: stats.isDirectory(),
+        size: stats.size,
+        mtime: stats.mtime,
+        ctime: stats.ctime
+      };
+    } catch (error) {
+      throw new Error(`Failed to get item stats: ${error.message}`);
+    }
+  },
+  async exists(itemPath) {
+    try {
+      await promises.access(itemPath);
+      return true;
+    } catch {
+      return false;
+    }
+  },
+  async mkdir(dirPath) {
+    try {
+      await promises.mkdir(dirPath, { recursive: true });
+    } catch (error) {
+      throw new Error(`Failed to create directory: ${error.message}`);
+    }
+  },
+  async delete(itemPath) {
+    try {
+      const stats = await promises.stat(itemPath);
+      if (stats.isDirectory()) {
+        await promises.rm(itemPath, { recursive: true });
+      } else {
+        await promises.unlink(itemPath);
+      }
+    } catch (error) {
+      throw new Error(`Failed to delete item: ${error.message}`);
+    }
+  },
+  async rename(oldPath, newPath) {
+    try {
+      await promises.rename(oldPath, newPath);
+    } catch (error) {
+      throw new Error(`Failed to rename item: ${error.message}`);
+    }
+  },
+  async copy(src2, dest) {
+    try {
+      const stats = await promises.stat(src2);
+      if (stats.isDirectory()) {
+        await promises.cp(src2, dest, { recursive: true });
+      } else {
+        await promises.copyFile(src2, dest);
+      }
+    } catch (error) {
+      throw new Error(`Failed to copy item: ${error.message}`);
+    }
+  }
+};
 function getDefaultExportFromCjs(x) {
   return x && x.__esModule && Object.prototype.hasOwnProperty.call(x, "default") ? x["default"] : x;
 }
@@ -1391,21 +1477,21 @@ function debug(options) {
   });
 }
 createRequire(import.meta.url);
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const __dirname = path$1.dirname(fileURLToPath(import.meta.url));
 if (process.env.NODE_ENV === "development") {
   debug();
 }
-process.env.APP_ROOT = path.join(__dirname, "..");
+process.env.APP_ROOT = path$1.join(__dirname, "..");
 const VITE_DEV_SERVER_URL = process.env["VITE_DEV_SERVER_URL"];
-const MAIN_DIST = path.join(process.env.APP_ROOT, "dist-electron");
-const RENDERER_DIST = path.join(process.env.APP_ROOT, "dist");
-process.env.VITE_PUBLIC = VITE_DEV_SERVER_URL ? path.join(process.env.APP_ROOT, "public") : RENDERER_DIST;
+const MAIN_DIST = path$1.join(process.env.APP_ROOT, "dist-electron");
+const RENDERER_DIST = path$1.join(process.env.APP_ROOT, "dist");
+process.env.VITE_PUBLIC = VITE_DEV_SERVER_URL ? path$1.join(process.env.APP_ROOT, "public") : RENDERER_DIST;
 let win;
 function createWindow() {
   win = new BrowserWindow$1({
-    icon: path.join(process.env.VITE_PUBLIC, "electron-vite.svg"),
+    icon: path$1.join(process.env.VITE_PUBLIC, "electron-vite.svg"),
     webPreferences: {
-      preload: path.join(__dirname, "preload.mjs")
+      preload: path$1.join(__dirname, "preload.mjs")
     }
   });
   win.webContents.on("did-finish-load", () => {
@@ -1414,7 +1500,7 @@ function createWindow() {
   if (VITE_DEV_SERVER_URL) {
     win.loadURL(VITE_DEV_SERVER_URL);
   } else {
-    win.loadFile(path.join(RENDERER_DIST, "index.html"));
+    win.loadFile(path$1.join(RENDERER_DIST, "index.html"));
   }
 }
 app$1.on("window-all-closed", () => {
@@ -1428,12 +1514,18 @@ app$1.on("activate", () => {
     createWindow();
   }
 });
-app$1.on(
-  "ready",
-  () => {
-    createWindow();
-  }
-);
+app$1.on("ready", () => {
+  createWindow();
+  ipcMain.handle("readFile", async (_, filePath) => await fileApi.readFile(filePath));
+  ipcMain.handle("writeFile", async (_, filePath, content) => await fileApi.writeFile(filePath, content));
+  ipcMain.handle("readDir", async (_, dirPath) => await fileApi.readDir(dirPath));
+  ipcMain.handle("stat", async (_, itemPath) => await fileApi.stat(itemPath));
+  ipcMain.handle("exists", async (_, itemPath) => await fileApi.exists(itemPath));
+  ipcMain.handle("mkdir", async (_, dirPath) => await fileApi.mkdir(dirPath));
+  ipcMain.handle("delete", async (_, itemPath) => await fileApi.delete(itemPath));
+  ipcMain.handle("rename", async (_, oldPath, newPath) => await fileApi.rename(oldPath, newPath));
+  ipcMain.handle("copy", async (_, src2, dest) => await fileApi.copy(src2, dest));
+});
 export {
   MAIN_DIST,
   RENDERER_DIST,

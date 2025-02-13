@@ -1,108 +1,49 @@
 "use strict";
 const electron = require("electron");
-const fs = require("fs");
-const path = require("path");
-electron.contextBridge.exposeInMainWorld("ipcRenderer", {
-  on(...args) {
-    const [channel, listener] = args;
-    return electron.ipcRenderer.on(channel, (event, ...args2) => listener(event, ...args2));
-  },
-  off(...args) {
-    const [channel, ...omit] = args;
-    return electron.ipcRenderer.off(channel, ...omit);
-  },
-  send(...args) {
-    const [channel, ...omit] = args;
-    return electron.ipcRenderer.send(channel, ...omit);
-  },
-  invoke(...args) {
-    const [channel, ...omit] = args;
-    return electron.ipcRenderer.invoke(channel, ...omit);
-  },
-  // File system APIs
-  fs: {
-    async readFile(filePath) {
-      try {
-        return await fs.promises.readFile(filePath, "utf-8");
-      } catch (error) {
-        throw new Error(`Failed to read file: ${error.message}`);
-      }
+electron.contextBridge.exposeInMainWorld(
+  "electronApi",
+  {
+    on(channel, func) {
+      const subscription = (_event, ...args) => func(...args);
+      electron.ipcRenderer.on(channel, subscription);
+      return subscription;
     },
-    async writeFile(filePath, content) {
-      try {
-        await fs.promises.writeFile(filePath, content, "utf-8");
-      } catch (error) {
-        throw new Error(`Failed to write file: ${error.message}`);
-      }
+    off(channel, func) {
+      electron.ipcRenderer.off(channel, func);
     },
-    async readDir(dirPath) {
-      try {
-        const items = await fs.promises.readdir(dirPath);
-        const itemsWithFullPath = items.map((item) => path.join(dirPath, item));
-        return itemsWithFullPath;
-      } catch (error) {
-        throw new Error(`Failed to read directory: ${error.message}`);
-      }
+    send(channel, ...args) {
+      electron.ipcRenderer.send(channel, ...args);
     },
-    async stat(itemPath) {
-      try {
-        const stats = await fs.promises.stat(itemPath);
-        return {
-          isFile: stats.isFile(),
-          isDirectory: stats.isDirectory(),
-          size: stats.size,
-          mtime: stats.mtime,
-          ctime: stats.ctime
-        };
-      } catch (error) {
-        throw new Error(`Failed to get item stats: ${error.message}`);
-      }
+    invoke(channel, ...args) {
+      return electron.ipcRenderer.invoke(channel, ...args);
     },
-    async exists(itemPath) {
-      try {
-        await fs.promises.access(itemPath);
-        return true;
-      } catch {
-        return false;
-      }
+    // File system APIs
+    readFile(filePath) {
+      return electron.ipcRenderer.invoke("readFile", filePath);
     },
-    async mkdir(dirPath) {
-      try {
-        await fs.promises.mkdir(dirPath, { recursive: true });
-      } catch (error) {
-        throw new Error(`Failed to create directory: ${error.message}`);
-      }
+    writeFile(filePath, content) {
+      return electron.ipcRenderer.invoke("writeFile", filePath, content);
     },
-    async delete(itemPath) {
-      try {
-        const stats = await fs.promises.stat(itemPath);
-        if (stats.isDirectory()) {
-          await fs.promises.rm(itemPath, { recursive: true });
-        } else {
-          await fs.promises.unlink(itemPath);
-        }
-      } catch (error) {
-        throw new Error(`Failed to delete item: ${error.message}`);
-      }
+    readDir(dirPath) {
+      return electron.ipcRenderer.invoke("readDir", dirPath);
     },
-    async rename(oldPath, newPath) {
-      try {
-        await fs.promises.rename(oldPath, newPath);
-      } catch (error) {
-        throw new Error(`Failed to rename item: ${error.message}`);
-      }
+    stat(itemPath) {
+      return electron.ipcRenderer.invoke("stat", itemPath);
     },
-    async copy(src, dest) {
-      try {
-        const stats = await fs.promises.stat(src);
-        if (stats.isDirectory()) {
-          await fs.promises.cp(src, dest, { recursive: true });
-        } else {
-          await fs.promises.copyFile(src, dest);
-        }
-      } catch (error) {
-        throw new Error(`Failed to copy item: ${error.message}`);
-      }
+    exists(itemPath) {
+      return electron.ipcRenderer.invoke("exists", itemPath);
+    },
+    mkdir(dirPath) {
+      return electron.ipcRenderer.invoke("mkdir", dirPath);
+    },
+    delete(itemPath) {
+      return electron.ipcRenderer.invoke("delete", itemPath);
+    },
+    rename(oldPath, newPath) {
+      return electron.ipcRenderer.invoke("rename", oldPath, newPath);
+    },
+    copy(src, dest) {
+      return electron.ipcRenderer.invoke("copy", src, dest);
     }
   }
-});
+);
