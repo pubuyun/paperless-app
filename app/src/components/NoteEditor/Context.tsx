@@ -1,116 +1,108 @@
-import React, { useState } from 'react';
-import { Box, IconButton } from '@mui/material';
-import TabContext from '@mui/lab/TabContext';
-import TabList from '@mui/lab/TabList';
-import TabPanel from '@mui/lab/TabPanel';
-import CloseIcon from '@mui/icons-material/Close';
-import { DragDropContext, Droppable, DropResult, DroppableProvided } from '@hello-pangea/dnd';
-import DraggableTab from './DraggableTab';
-import Tiptap from './Editor';
+import * as React from "react";
+import { Box } from "@mui/material";
+import TabContext from "@mui/lab/TabContext";
+import TabList from "@mui/lab/TabList";
+import TabPanel from "@mui/lab/TabPanel";
+import { DragDropContext, Droppable, DropResult, DroppableProvided } from "@hello-pangea/dnd";
+import DraggableTab from "./DraggableTab";
+import Tab from "@mui/material/Tab";
 import Stack from "@mui/material/Stack";
-import './Context.scss';
+import CloseIcon from '@mui/icons-material/Close';
+import Tiptap from './Editor';
+import './Context.scss'
 
-interface tabInterface {
-  id: string;
-  label: string;
-  value: string;
-  content: string;
-}
+export default function DraggableTabsList() {
+  const [activeValue, setActiveValue] = React.useState("1");
 
-const TabContainer: React.FC = () => {
-  const [tabs, setTabs] = React.useState<tabInterface[]>(
+  const [tabs, setTabs] = React.useState(
     [...Array(55)].map((_, index) => ({
-      id: `${index + 1}`,
+      id: `tab${index + 1}`,
       label: `Tab ${index + 1}`,
       value: `${index + 1}`,
       content: `Content ${index + 1}`
     }))
   );
-  const [activeTabValue, setactiveTabValue] = useState('1');
 
-  const handleTabChange = (_event: React.SyntheticEvent, newValue: string) => {
-    setactiveTabValue(newValue);
+  const handleChange = (event: React.SyntheticEvent, newValue: string) => {
+    setActiveValue(newValue);
   };
 
-  const handleTabClick = (value: string) => {
-    setactiveTabValue(value);
-  };
-
-  const handleTabClose = (event: React.MouseEvent, tabId: string) => {
-    event.stopPropagation();
-    setTabs(tabs.filter(tab => tab.id !== tabId));
-    if (activeTabValue === tabId && tabs.length > 1) {
-      setactiveTabValue(tabs[0].id === tabId ? tabs[1].id : tabs[0].id);
+  const handleTabClose = (tabValue: string) => {
+    const newTabs = tabs.filter((tab) => tab.value !== tabValue);
+    setTabs(newTabs);
+    if (activeValue === tabValue) {
+      const newActiveIndex = tabs.findIndex((tab) => tab.value === newTabs[0].value);
+      setActiveValue(newTabs[newActiveIndex].value);
     }
   };
 
   const onDragEnd = (result: DropResult) => {
     if (!result.destination) return;
-
     const newTabs = Array.from(tabs);
-    const [draggedTab] = newTabs.splice(result.source.index, 1);
+    const draggedTab = newTabs.splice(result.source.index, 1)[0];
     newTabs.splice(result.destination.index, 0, draggedTab);
     setTabs(newTabs);
   };
 
-  const renderTabList = (droppableProvided: DroppableProvided) => (
-    <div
-      ref={droppableProvided.innerRef}
-      {...droppableProvided.droppableProps}
+  const _renderTabList = (droppableProvided: DroppableProvided | undefined) => (
+    <TabList
+      onChange={handleChange}
+      aria-label="Draggable Tabs"
+      variant="scrollable"
     >
-      <TabList
-        onChange={handleTabChange}
-        aria-label="Editor tabs"
-        variant="scrollable"
-        sx={{ minHeight: 48, minWidth: '100%' }}
-      onClick={(e: React.MouseEvent) => e.stopPropagation()}
-      >
-        {tabs.map((tab, index) => {
-          return (
-            <DraggableTab
-              key={tab.id}
-              id={tab.id}
-              label={tab.label}
-              icon={
-                <IconButton
-                  size="small"
-                  onClick={(event) => handleTabClose(event, tab.id)}
-                >
-                  <CloseIcon fontSize="small" />
-                </IconButton>
-              }
-              value={tab.value}
-              index={index}
-              onClick={() => handleTabClick(tab.value)}
-            />
-          );
-        })}
-      </TabList>
-      {droppableProvided?.placeholder}
-    </div>
+      {tabs.map((tab, index) => {
+        const child = <Tab label={tab.label} value={tab.value} key={index} icon={
+          <Box onClick={(e) => {
+            e.stopPropagation();
+            handleTabClose(tab.value);
+          }}>
+            <CloseIcon />
+          </Box>
+        }/>;
+
+        return (
+          <DraggableTab
+            label={tab.label}
+            value={tab.value}
+            index={index}
+            key={index}
+            child={child}
+          />
+        );
+      })}
+      {droppableProvided ? droppableProvided.placeholder : null}
+    </TabList>
   );
+
+  const _renderTabListWrappedInDroppable = () => (
+    <DragDropContext onDragEnd={onDragEnd}>
+      <div>
+        <Droppable droppableId="1" direction="horizontal">
+          {(droppableProvided) => (
+            <div
+              ref={droppableProvided.innerRef}
+              {...droppableProvided.droppableProps}
+            >
+              {_renderTabList(droppableProvided)}
+            </div>
+          )}
+        </Droppable>
+      </div>
+    </DragDropContext>
+  );
+
   return (
     <Box sx={{ width: "100%", typography: "body1" }}>
-      <TabContext value={activeTabValue}>
+      <TabContext value={activeValue}>
         <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
-          <Stack direction="column">
-            <DragDropContext onDragEnd={onDragEnd}>
-              <div>
-                <Droppable droppableId="tabs" direction="horizontal" >
-                  {renderTabList}
-                </Droppable>
-              </div>
-            </DragDropContext>
-          </Stack>
+          <Stack direction="column">{_renderTabListWrappedInDroppable()}</Stack>
         </Box>
-        {tabs.map((tab) => (
-          <TabPanel value={tab.value} key={tab.id}>
+        {tabs.map((tab, index) => (
+          <TabPanel value={tab.value} key={index}>
             <Tiptap content={tab.content} />
           </TabPanel>
         ))}
       </TabContext>
     </Box>
   );
-};
-
-export default TabContainer;
+}

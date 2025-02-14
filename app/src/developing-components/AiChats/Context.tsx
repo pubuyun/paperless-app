@@ -4,7 +4,7 @@ import TabContext from '@mui/lab/TabContext';
 import TabList from '@mui/lab/TabList';
 import TabPanel from '@mui/lab/TabPanel';
 import CloseIcon from '@mui/icons-material/Close';
-import { DragDropContext, Droppable, DropResult, DroppableProvided } from 'react-beautiful-dnd';
+import { DragDropContext, Droppable, DropResult, DroppableProvided } from '@hello-pangea/dnd';
 import DraggableTab from './DraggableTab';
 import Tiptap from './Editor';
 import './Context.scss';
