@@ -51,14 +51,28 @@ export default function DraggableTabsList() {
       variant="scrollable"
     >
       {tabs.map((tab, index) => {
-        const child = <Tab label={tab.label} value={tab.value} key={index} icon={
+        const child = <Tab 
+          label={tab.label} 
+          value={tab.value} 
+          key={index} 
+          icon={
           <Box onClick={(e) => {
             e.stopPropagation();
             handleTabClose(tab.value);
           }}>
             <CloseIcon />
           </Box>
-        }/>;
+          }
+          iconPosition="end"
+          sx={{ 
+            minWidth: 120,
+            minHeight: 40,
+            cursor: "drag",
+            overflow: "hidden",
+            whiteSpace: "nowrap",
+            textOverflow: "ellipsis",
+          }}
+        />;
 
         return (
           <DraggableTab
@@ -76,7 +90,12 @@ export default function DraggableTabsList() {
 
   const _renderTabListWrappedInDroppable = () => (
     <DragDropContext onDragEnd={onDragEnd}>
-      <div>
+      <div style={{ 
+        display: "flex", 
+        overflowX: "auto", 
+        WebkitOverflowScrolling: 'touch',
+        scrollbarWidth: 'none'
+      }}>
         <Droppable droppableId="1" direction="horizontal">
           {(droppableProvided) => (
             <div

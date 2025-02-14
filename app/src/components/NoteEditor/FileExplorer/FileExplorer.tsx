@@ -2,7 +2,6 @@ import * as React from 'react';
 import clsx from 'clsx';
 import { animated, useSpring } from '@react-spring/web';
 import { styled, alpha } from '@mui/material/styles';
-
 // icons ---------------- 
 import ArticleIcon from '@mui/icons-material/Article';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -25,45 +24,13 @@ import {
   TreeItem2IconContainer,
   TreeItem2Label,
   TreeItem2Root,
+  TreeItem2Props,
 } from '@mui/x-tree-view/TreeItem2';
 import { TreeItem2Icon } from '@mui/x-tree-view/TreeItem2Icon';
 import { TreeItem2Provider } from '@mui/x-tree-view/TreeItem2Provider';
 import { TreeItem2DragAndDropOverlay } from '@mui/x-tree-view/TreeItem2DragAndDropOverlay';
-
-const ITEMS = [
-  {
-    id: '1',
-    label: 'Documents',
-    children: [
-      {
-        id: '1.1',
-        label: 'Company',
-        children: [
-          { id: '1.1.1', label: 'Invoice', fileType: 'pdf' },
-          { id: '1.1.2', label: 'Meeting notes', fileType: 'doc' },
-          { id: '1.1.3', label: 'Tasks list', fileType: 'doc' },
-          { id: '1.1.4', label: 'Equipment', fileType: 'pdf' },
-          { id: '1.1.5', label: 'Video conference', fileType: 'video' },
-        ],
-      },
-      { id: '1.2', label: 'Personal', fileType: 'folder' },
-      { id: '1.3', label: 'Group photo', fileType: 'image' },
-    ],
-  },
-  {
-    id: '2',
-    label: 'Bookmarked',
-    fileType: 'pinned',
-    children: [
-      { id: '2.1', label: 'Learning materials', fileType: 'folder' },
-      { id: '2.2', label: 'News', fileType: 'folder' },
-      { id: '2.3', label: 'Forums', fileType: 'folder' },
-      { id: '2.4', label: 'Travel documents', fileType: 'pdf' },
-    ],
-  },
-  { id: '3', label: 'History', fileType: 'folder' },
-  { id: '4', label: 'Trash', fileType: 'trash' },
-];
+import { SvgIconComponent } from '@mui/icons-material';
+import { FileType, SAMPLE_ITEMS, FileItem, loadDirectoryContents } from './loadFiles';
 
 function DotIcon() {
   return (
@@ -140,7 +107,14 @@ const CustomTreeItemContent = styled(TreeItem2Content)(({ theme }) => ({
 
 const AnimatedCollapse = animated(Collapse);
 
-function TransitionComponent(props) {
+interface TransitionProps {
+  in?: boolean;
+  className?: string;
+  style?: React.CSSProperties;
+  children?: React.ReactNode;
+}
+
+function TransitionComponent(props: TransitionProps) {
   const style = useSpring({
     to: {
       opacity: props.in ? 1 : 0,
@@ -157,11 +131,10 @@ const StyledTreeItemLabelText = styled(Typography)({
   fontWeight: 500,
 });
 
-// 定义标签组件的 Props 接口
 interface CustomLabelProps {
-    icon?: React.ElementType;
-    expandable?: boolean;
-    children?: React.ReactNode;
+  icon?: SvgIconComponent;
+  expandable?: boolean;
+  children?: React.ReactNode;
 }
 
 function CustomLabel({ icon: Icon, expandable, children, ...other }: CustomLabelProps) {
@@ -188,14 +161,14 @@ function CustomLabel({ icon: Icon, expandable, children, ...other }: CustomLabel
   );
 }
 
-const isExpandable = (reactChildren) => {
+const isExpandable = (reactChildren: React.ReactNode): boolean => {
   if (Array.isArray(reactChildren)) {
     return reactChildren.length > 0 && reactChildren.some(isExpandable);
   }
   return Boolean(reactChildren);
 };
 
-const getIconFromFileType = (fileType) => {
+const getIconFromFileType = (fileType: FileType) => {
   switch (fileType) {
     case 'image':
       return ImageIcon;
@@ -215,111 +188,225 @@ const getIconFromFileType = (fileType) => {
       return ArticleIcon;
   }
 };
-
-type FileType = 'image' | 'pdf' | 'doc' | 'video' | 'folder' | 'pinned' | 'trash';
-
-// 定义树节点项的接口
-interface TreeItem {
-    id: string;
-    label: string;
-    fileType?: FileType;
-    children?: TreeItem[];
-}
   
-// 定义自定义树项组件的 Props 接口
-interface CustomTreeItemProps {
-id?: string;
-itemId: string;
-label: string;
-disabled?: boolean;
-children?: React.ReactNode;
-className?: string;
+interface CustomTreeItemProps extends Omit<TreeItem2Props, 'label'> {
+  id?: string;
+  itemId: string;
+  label?: React.ReactNode;
+  disabled?: boolean;
+  children?: React.ReactNode;
+  className?: string;
 }
 
 const CustomTreeItem = React.forwardRef<HTMLLIElement, CustomTreeItemProps>(
-    function CustomTreeItem(props, ref) {
-      const { id, itemId, label, disabled, children, ...other } = props;
-  
-      const {
-        getRootProps,
-        getContentProps,
-        getIconContainerProps,
-        getCheckboxProps,
-        getLabelProps,
-        getGroupTransitionProps,
-        getDragAndDropOverlayProps,
-        status,
-        publicAPI,
-      } = useTreeItem2({ 
-        id, 
-        itemId, 
-        children, 
-        label, 
-        disabled, 
-        rootRef: ref 
-      });
-  
-      const item = publicAPI.getItem(itemId);
-      const expandable = isExpandable(children);
-      let icon;
-      if (expandable) {
-        icon = FolderRounded;
-      } else if (item.fileType) {
-        icon = getIconFromFileType(item.fileType as FileType);
-      }
-  
-      return (
-        <TreeItem2Provider itemId={itemId}>
-          <StyledTreeItemRoot {...getRootProps(other)}>
-            <CustomTreeItemContent
-              {...getContentProps({
-                className: clsx('content', {
-                  'Mui-expanded': status.expanded,
-                  'Mui-selected': status.selected,
-                  'Mui-focused': status.focused,
-                  'Mui-disabled': status.disabled,
-                }),
-              })}
-            >
-              <TreeItem2IconContainer {...getIconContainerProps()}>
-                <TreeItem2Icon status={status} />
-              </TreeItem2IconContainer>
-              <TreeItem2Checkbox {...getCheckboxProps()} />
-              <CustomLabel
-                {...getLabelProps({ 
-                  icon, 
-                  expandable: expandable && status.expanded 
-                })}
-              />
-              <TreeItem2DragAndDropOverlay {...getDragAndDropOverlayProps()} />
-            </CustomTreeItemContent>
-            {children && <TransitionComponent {...getGroupTransitionProps()} />}
-          </StyledTreeItemRoot>
-        </TreeItem2Provider>
-      );
-    }
-  );
+  function CustomTreeItem(props: CustomTreeItemProps, ref) {
+    const { id, itemId, label, disabled, children, ...other } = props;
 
+    const {
+      getRootProps,
+      getContentProps,
+      getIconContainerProps,
+      getCheckboxProps,
+      getLabelProps,
+      getGroupTransitionProps,
+      getDragAndDropOverlayProps,
+      status,
+      publicAPI,
+    } = useTreeItem2({ 
+      id, 
+      itemId, 
+      children, 
+      label, 
+      disabled, 
+      rootRef: ref 
+    });
+
+    const item = publicAPI.getItem(itemId);
+    const expandable = isExpandable(children);
+    let icon;
+    if (expandable) {
+      icon = FolderRounded;
+    } else if (item.fileType) {
+      icon = getIconFromFileType(item.fileType as FileType);
+    }
+
+    return (
+      <TreeItem2Provider itemId={itemId}>
+        <StyledTreeItemRoot {...getRootProps(other as object)}>
+          <CustomTreeItemContent
+            {...getContentProps({
+              className: clsx('content', {
+                'Mui-expanded': status.expanded,
+                'Mui-selected': status.selected,
+                'Mui-focused': status.focused,
+                'Mui-disabled': status.disabled,
+              }),
+            })}
+          >
+            <TreeItem2IconContainer {...getIconContainerProps()}>
+              <TreeItem2Icon status={status} />
+            </TreeItem2IconContainer>
+            <TreeItem2Checkbox {...getCheckboxProps()} />
+            <CustomLabel
+              {...getLabelProps({ 
+                icon, 
+                expandable: expandable && status.expanded 
+              })}
+            />
+            <TreeItem2DragAndDropOverlay {...getDragAndDropOverlayProps()} />
+          </CustomTreeItemContent>
+          {children && <TransitionComponent {...getGroupTransitionProps()} />}
+        </StyledTreeItemRoot>
+      </TreeItem2Provider>
+    );
+  }
+);
 
 interface MultiSelectFileExplorerProps {
     defaultExpandedItems?: string[];
     onSelectionChange?: (selectedItems: string[]) => void;
+    onItemsChange?: (items: FileItem[]) => void;
 }
 
 export default function MultiSelectFileExplorer({
     defaultExpandedItems = ['1', '1.1'],
     onSelectionChange,
+    onItemsChange,
   }: MultiSelectFileExplorerProps) {
-    const [selectedItems, setSelectedItems] = React.useState<string[]>([]);
-  
-    const handleSelectionChange = (event: React.SyntheticEvent, itemIds: string[]) => {
-      setSelectedItems(itemIds);
-      onSelectionChange?.(itemIds);
+  const [selectedItems, setSelectedItems] = React.useState<string[]>([]);
+  const [items, setItems] = React.useState(SAMPLE_ITEMS);
+
+  const handleContextMenu = async (event: React.MouseEvent) => {
+    event.preventDefault();
+    window.electronApi.send('show-context-menu');
+  };
+
+  const handleOpenFolder = async (dialogResult: { canceled: boolean; filePaths: string[] }) => {
+    if (!dialogResult.canceled && dialogResult.filePaths.length > 0) {
+      const folderPath = dialogResult.filePaths[0];
+      const contents = await loadDirectoryContents(folderPath);
+      
+      const newFolder = {
+        id: folderPath,
+        label: folderPath.split('/').pop() || folderPath,
+        fileType: 'folder' as const,
+        children: contents
+      };
+
+      setItems(prevItems => [...prevItems, newFolder]);
+      onItemsChange?.([...items, newFolder]);
+    }
+  };
+
+  const handleNewFile = async (dialogResult: { canceled: boolean; filePath?: string }) => {
+    if (!dialogResult.canceled && dialogResult.filePath) {
+      await window.electronApi.writeFile(dialogResult.filePath, '');
+      const fileName = dialogResult.filePath.split('/').pop() || dialogResult.filePath;
+      
+      const newFile = {
+        id: dialogResult.filePath,
+        label: fileName,
+        fileType: getFileType(fileName)
+      };
+
+      setItems(prevItems => [...prevItems, newFile]);
+      onItemsChange?.([...items, newFile]);
+    }
+  };
+
+  const handleNewFolder = async (dialogResult: { canceled: boolean; filePath?: string }) => {
+    if (!dialogResult.canceled && dialogResult.filePath) {
+      await window.electronApi.mkdir(dialogResult.filePath);
+      const folderName = dialogResult.filePath.split('/').pop() || dialogResult.filePath;
+      
+      const newFolder = {
+        id: dialogResult.filePath,
+        label: folderName,
+        fileType: 'folder' as const,
+        children: []
+      };
+
+      setItems(prevItems => [...prevItems, newFolder]);
+      onItemsChange?.([...items, newFolder]);
+    }
+  };
+
+  const handleDelete = async (result: { response: number }) => {
+    if (result.response === 0 && selectedItems.length > 0) {
+      await Promise.all(selectedItems.map(itemId => window.electronApi.delete(itemId)));
+      
+      setItems(prevItems => prevItems.filter(item => !selectedItems.includes(item.id)));
+      onItemsChange?.(items.filter(item => !selectedItems.includes(item.id)));
+      setSelectedItems([]);
+    }
+  };
+
+  const getFileType = (fileName: string): FileType => {
+    const ext = fileName.split('.').pop()?.toLowerCase();
+    switch (ext) {
+      case 'jpg':
+      case 'jpeg':
+      case 'png':
+      case 'gif':
+        return 'image';
+      case 'pdf':
+        return 'pdf';
+      case 'doc':
+      case 'docx':
+      case 'txt':
+      case 'md':
+        return 'doc';
+      case 'mp4':
+      case 'mov':
+      case 'avi':
+        return 'video';
+      default:
+        return 'doc';
+    }
+  };
+
+  React.useEffect(() => {
+    const handlers = {
+      folderOpen: (...args: unknown[]) => {
+        const dialogResult = args[0] as { canceled: boolean; filePaths: string[] };
+        void handleOpenFolder(dialogResult);
+      },
+      newFile: (...args: unknown[]) => {
+        const dialogResult = args[0] as { canceled: boolean; filePath?: string };
+        void handleNewFile(dialogResult);
+      },
+      newFolder: (...args: unknown[]) => {
+        const dialogResult = args[0] as { canceled: boolean; filePath?: string };
+        void handleNewFolder(dialogResult);
+      },
+      delete: (...args: unknown[]) => {
+        const result = args[0] as { response: number };
+        void handleDelete(result);
+      }
     };
+
+    window.electronApi.on('open-folder-dialog-completed', handlers.folderOpen);
+    window.electronApi.on('new-file-dialog-completed', handlers.newFile);
+    window.electronApi.on('new-folder-dialog-completed', handlers.newFolder);
+    window.electronApi.on('delete-confirmed', handlers.delete);
+
+    return () => {
+      window.electronApi.off('open-folder-dialog-completed', handlers.folderOpen);
+      window.electronApi.off('new-file-dialog-completed', handlers.newFile);
+      window.electronApi.off('new-folder-dialog-completed', handlers.newFolder);
+      window.electronApi.off('delete-confirmed', handlers.delete);
+    };
+  }, [items, selectedItems]);
   
-    return (
+  const handleSelectionChange = (event: React.SyntheticEvent, itemIds: string[]) => {
+    setSelectedItems(itemIds);
+    onSelectionChange?.(itemIds);
+  };
+
+  return (
+    <Box onContextMenu={handleContextMenu}>
       <RichTreeView
-        items={ITEMS}
+        items={items}
         defaultExpandedItems={defaultExpandedItems}
         multiSelect
         selectedItems={selectedItems}
@@ -335,5 +422,6 @@ export default function MultiSelectFileExplorer({
         }}
         slots={{ item: CustomTreeItem }}
       />
-    );
-  }
+    </Box>
+  );
+}

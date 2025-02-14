@@ -7,6 +7,9 @@ interface FileAPI {
   off(channel: string, func: IpcHandler): void
   send(channel: string, ...args: unknown[]): void
   invoke(channel: string, ...args: unknown[]): Promise<unknown>
+  showOpenDialog(options: { properties: string[] }): Promise<{ canceled: boolean; filePaths: string[] }>
+  showSaveDialog(options: { title?: string; buttonLabel?: string; properties?: string[] }): Promise<{ canceled: boolean; filePath?: string }>
+  showMessageBox(options: { type: string; title: string; message: string; buttons: string[]; defaultId?: number; cancelId?: number }): Promise<{ response: number }>
   readFile(filePath: string): Promise<string>
   writeFile(filePath: string, content: string): Promise<void>
   readDir(dirPath: string): Promise<string[]>
@@ -70,6 +73,16 @@ contextBridge.exposeInMainWorld(
     },
     copy(src: string, dest: string) {
       return ipcRenderer.invoke('copy', src, dest)
+    },
+    // Dialog APIs
+    showOpenDialog(options: { properties: string[] }) {
+      return ipcRenderer.invoke('showOpenDialog', options)
+    },
+    showSaveDialog(options: { title?: string; buttonLabel?: string; properties?: string[] }) {
+      return ipcRenderer.invoke('showSaveDialog', options)
+    },
+    showMessageBox(options: { type: string; title: string; message: string; buttons: string[]; defaultId?: number; cancelId?: number }) {
+      return ipcRenderer.invoke('showMessageBox', options)
     }
   } as FileAPI
 )

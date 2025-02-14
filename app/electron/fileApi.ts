@@ -21,7 +21,7 @@ export const fileApi = {
   async readDir(dirPath: string): Promise<string[]> {
     try {
       const items = await fs.readdir(dirPath)
-      return items.map(item => path.join(dirPath, item))
+      return items
     } catch (error) {
       throw new Error(`Failed to read directory: ${error.message}`)
     }

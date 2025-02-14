@@ -1,12 +1,13 @@
-import { app, BrowserWindow, ipcMain } from 'electron'
+import { app, BrowserWindow, ipcMain, dialog, Menu, shell } from 'electron'
 import { fileApi } from './fileApi'
 import { createRequire } from 'node:module'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 import debug from 'electron-debug'
 
-
+/* eslint-disable */
 const require = createRequire(import.meta.url)
+/* eslint-enable */
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 // The built directory structure
@@ -18,7 +19,6 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 // │ │ ├── main.js
 // │ │ └── preload.mjs
 // │
-
 
 // if development, enable debug
 if (process.env.NODE_ENV === 'development') {
@@ -55,7 +55,157 @@ function createWindow() {
     win.loadFile(path.join(RENDERER_DIST, 'index.html'))
   }
 }
+const isMac = process.platform === 'darwin';
 
+const template = [
+  ...(isMac
+    ? [{
+        label: app.name,
+        submenu: [
+          { role: 'about' },
+          { type: 'separator' },
+          { role: 'services' },
+          { type: 'separator' },
+          { role: 'hide' },
+          { role: 'hideOthers' },
+          { role: 'unhide' },
+          { type: 'separator' },
+          { role: 'quit' }
+        ]
+      }]
+    : []),
+  {
+    label: 'File',
+    submenu: [
+      {
+        label: 'Open Folder',
+        click: async () => {
+          const result = await dialog.showOpenDialog(win!, {
+            properties: ['openDirectory']
+          });
+          win.webContents.send('open-folder-dialog-completed', result);
+        }
+      },
+      { type: 'separator' },
+      {
+        label: 'New',
+        submenu: [
+          {
+            label: 'File',
+            click: async () => {
+              const result = await dialog.showSaveDialog(win!, {
+                title: 'Create New File',
+                buttonLabel: 'Create'
+              });
+              win.webContents.send('new-file-dialog-completed', result);
+            }
+          },
+          {
+            label: 'Folder',
+            click: async () => {
+              const result = await dialog.showSaveDialog(win!, {
+                title: 'Create New Folder',
+                buttonLabel: 'Create',
+                properties: ['createDirectory']
+              });
+              win.webContents.send('new-folder-dialog-completed', result);
+            }
+          }
+        ]
+      },
+      { type: 'separator' },
+      {
+        label: 'Delete',
+        click: async () => {
+          const result = await dialog.showMessageBox(win!, {
+            type: 'warning',
+            title: 'Confirm Delete',
+            message: 'Are you sure you want to delete the selected items?',
+            buttons: ['Delete', 'Cancel'],
+            defaultId: 1,
+            cancelId: 1
+          });
+          win.webContents.send('delete-confirmed', result);
+        }
+      },
+      isMac ? { role: 'close' } : { role: 'quit' }
+    ]
+  },
+  {
+    label: 'Edit',
+    submenu: [
+      { role: 'undo' },
+      { role: 'redo' },
+      { type: 'separator' },
+      { role: 'cut' },
+      { role: 'copy' },
+      { role: 'paste' },
+      ...(isMac
+        ? [
+            { role: 'pasteAndMatchStyle' },
+            { role: 'delete' },
+            { role: 'selectAll' },
+            { type: 'separator' },
+            {
+              label: 'Speech',
+              submenu: [
+                { role: 'startSpeaking' },
+                { role: 'stopSpeaking' }
+              ]
+            }
+          ]
+        : [
+            { role: 'delete' },
+            { type: 'separator' },
+            { role: 'selectAll' }
+          ])
+    ]
+  },
+  {
+    label: 'View',
+    submenu: [
+      { role: 'reload' },
+      { role: 'forceReload' },
+      { role: 'toggleDevTools' },
+      { type: 'separator' },
+      { role: 'resetZoom' },
+      { role: 'zoomIn' },
+      { role: 'zoomOut' },
+      { type: 'separator' },
+      { role: 'togglefullscreen' }
+    ]
+  },
+  {
+    label: 'Window',
+    submenu: [
+      { role: 'minimize' },
+      { role: 'zoom' },
+      ...(isMac
+        ? [
+            { type: 'separator' },
+            { role: 'front' },
+            { type: 'separator' },
+            { role: 'window' }
+          ]
+        : [
+            { role: 'close' }
+          ])
+    ]
+  },
+  {
+    role: 'help',
+    submenu: [
+      {
+        label: 'Learn More',
+        click: async () => {
+          await shell.openExternal('https://electronjs.org');
+        }
+      }
+    ]
+  }
+];
+const menu = Menu.buildFromTemplate(template);
+Menu.setApplicationMenu(menu);
 // Quit when all windows are closed, except on macOS. There, it's common
 // for applications and their menu bar to stay active until the user quits
 // explicitly with Cmd + Q.
@@ -73,6 +223,7 @@ app.on('activate', () => {
     createWindow()
   }
 })
+
 app.on('ready', () => {
   createWindow()
   
@@ -86,4 +237,23 @@ app.on('ready', () => {
   ipcMain.handle('delete', async (_, itemPath) => await fileApi.delete(itemPath))
   ipcMain.handle('rename', async (_, oldPath, newPath) => await fileApi.rename(oldPath, newPath))
   ipcMain.handle('copy', async (_, src, dest) => await fileApi.copy(src, dest))
+  
+  // Context menu handler
+  ipcMain.on('show-context-menu', (event) => {
+    const menu = Menu.buildFromTemplate(template);
+    menu.popup({ window: win });
+  });
+
+  // Dialog handlers
+  ipcMain.handle('showOpenDialog', async (_, options) => {
+    return await dialog.showOpenDialog(win!, options)
+  });
+
+  ipcMain.handle('showSaveDialog', async (_, options) => {
+    return await dialog.showSaveDialog(win!, options)
+  });
+
+  ipcMain.handle('showMessageBox', async (_, options) => {
+    return await dialog.showMessageBox(win!, options)
+  });
 })

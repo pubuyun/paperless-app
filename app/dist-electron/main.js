@@ -1,9 +1,8 @@
-import electron, { BrowserWindow as BrowserWindow$1, app as app$1, ipcMain } from "electron";
+import electron, { BrowserWindow as BrowserWindow$1, app as app$1, dialog, shell, Menu, ipcMain } from "electron";
 import { promises } from "fs";
-import path from "path";
 import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";
-import path$1 from "node:path";
+import path from "node:path";
 import process$1 from "node:process";
 import require$$1 from "tty";
 import require$$1$1 from "util";
@@ -26,7 +25,7 @@ const fileApi = {
   async readDir(dirPath) {
     try {
       const items = await promises.readdir(dirPath);
-      return items.map((item) => path.join(dirPath, item));
+      return items;
     } catch (error) {
       throw new Error(`Failed to read directory: ${error.message}`);
     }
@@ -607,14 +606,14 @@ function requireCommon() {
         }
       }
     }
-    function matchesTemplate(search, template) {
+    function matchesTemplate(search, template2) {
       let searchIndex = 0;
       let templateIndex = 0;
       let starIndex = -1;
       let matchIndex = 0;
       while (searchIndex < search.length) {
-        if (templateIndex < template.length && (template[templateIndex] === search[searchIndex] || template[templateIndex] === "*")) {
-          if (template[templateIndex] === "*") {
+        if (templateIndex < template2.length && (template2[templateIndex] === search[searchIndex] || template2[templateIndex] === "*")) {
+          if (template2[templateIndex] === "*") {
             starIndex = templateIndex;
             matchIndex = searchIndex;
             templateIndex++;
@@ -630,10 +629,10 @@ function requireCommon() {
           return false;
         }
       }
-      while (templateIndex < template.length && template[templateIndex] === "*") {
+      while (templateIndex < template2.length && template2[templateIndex] === "*") {
         templateIndex++;
       }
-      return templateIndex === template.length;
+      return templateIndex === template2.length;
     }
     function disable() {
       const namespaces = [
@@ -1477,21 +1476,21 @@ function debug(options) {
   });
 }
 createRequire(import.meta.url);
-const __dirname = path$1.dirname(fileURLToPath(import.meta.url));
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 if (process.env.NODE_ENV === "development") {
   debug();
 }
-process.env.APP_ROOT = path$1.join(__dirname, "..");
+process.env.APP_ROOT = path.join(__dirname, "..");
 const VITE_DEV_SERVER_URL = process.env["VITE_DEV_SERVER_URL"];
-const MAIN_DIST = path$1.join(process.env.APP_ROOT, "dist-electron");
-const RENDERER_DIST = path$1.join(process.env.APP_ROOT, "dist");
-process.env.VITE_PUBLIC = VITE_DEV_SERVER_URL ? path$1.join(process.env.APP_ROOT, "public") : RENDERER_DIST;
+const MAIN_DIST = path.join(process.env.APP_ROOT, "dist-electron");
+const RENDERER_DIST = path.join(process.env.APP_ROOT, "dist");
+process.env.VITE_PUBLIC = VITE_DEV_SERVER_URL ? path.join(process.env.APP_ROOT, "public") : RENDERER_DIST;
 let win;
 function createWindow() {
   win = new BrowserWindow$1({
-    icon: path$1.join(process.env.VITE_PUBLIC, "electron-vite.svg"),
+    icon: path.join(process.env.VITE_PUBLIC, "electron-vite.svg"),
     webPreferences: {
-      preload: path$1.join(__dirname, "preload.mjs")
+      preload: path.join(__dirname, "preload.mjs")
     }
   });
   win.webContents.on("did-finish-load", () => {
@@ -1500,9 +1499,153 @@ function createWindow() {
   if (VITE_DEV_SERVER_URL) {
     win.loadURL(VITE_DEV_SERVER_URL);
   } else {
-    win.loadFile(path$1.join(RENDERER_DIST, "index.html"));
+    win.loadFile(path.join(RENDERER_DIST, "index.html"));
   }
 }
+const isMac = process.platform === "darwin";
+const template = [
+  ...isMac ? [{
+    label: app$1.name,
+    submenu: [
+      { role: "about" },
+      { type: "separator" },
+      { role: "services" },
+      { type: "separator" },
+      { role: "hide" },
+      { role: "hideOthers" },
+      { role: "unhide" },
+      { type: "separator" },
+      { role: "quit" }
+    ]
+  }] : [],
+  {
+    label: "File",
+    submenu: [
+      {
+        label: "Open Folder",
+        click: async () => {
+          const result = await dialog.showOpenDialog(win, {
+            properties: ["openDirectory"]
+          });
+          win.webContents.send("open-folder-dialog-completed", result);
+        }
+      },
+      { type: "separator" },
+      {
+        label: "New",
+        submenu: [
+          {
+            label: "File",
+            click: async () => {
+              const result = await dialog.showSaveDialog(win, {
+                title: "Create New File",
+                buttonLabel: "Create"
+              });
+              win.webContents.send("new-file-dialog-completed", result);
+            }
+          },
+          {
+            label: "Folder",
+            click: async () => {
+              const result = await dialog.showSaveDialog(win, {
+                title: "Create New Folder",
+                buttonLabel: "Create",
+                properties: ["createDirectory"]
+              });
+              win.webContents.send("new-folder-dialog-completed", result);
+            }
+          }
+        ]
+      },
+      { type: "separator" },
+      {
+        label: "Delete",
+        click: async () => {
+          const result = await dialog.showMessageBox(win, {
+            type: "warning",
+            title: "Confirm Delete",
+            message: "Are you sure you want to delete the selected items?",
+            buttons: ["Delete", "Cancel"],
+            defaultId: 1,
+            cancelId: 1
+          });
+          win.webContents.send("delete-confirmed", result);
+        }
+      },
+      isMac ? { role: "close" } : { role: "quit" }
+    ]
+  },
+  {
+    label: "Edit",
+    submenu: [
+      { role: "undo" },
+      { role: "redo" },
+      { type: "separator" },
+      { role: "cut" },
+      { role: "copy" },
+      { role: "paste" },
+      ...isMac ? [
+        { role: "pasteAndMatchStyle" },
+        { role: "delete" },
+        { role: "selectAll" },
+        { type: "separator" },
+        {
+          label: "Speech",
+          submenu: [
+            { role: "startSpeaking" },
+            { role: "stopSpeaking" }
+          ]
+        }
+      ] : [
+        { role: "delete" },
+        { type: "separator" },
+        { role: "selectAll" }
+      ]
+    ]
+  },
+  {
+    label: "View",
+    submenu: [
+      { role: "reload" },
+      { role: "forceReload" },
+      { role: "toggleDevTools" },
+      { type: "separator" },
+      { role: "resetZoom" },
+      { role: "zoomIn" },
+      { role: "zoomOut" },
+      { type: "separator" },
+      { role: "togglefullscreen" }
+    ]
+  },
+  {
+    label: "Window",
+    submenu: [
+      { role: "minimize" },
+      { role: "zoom" },
+      ...isMac ? [
+        { type: "separator" },
+        { role: "front" },
+        { type: "separator" },
+        { role: "window" }
+      ] : [
+        { role: "close" }
+      ]
+    ]
+  },
+  {
+    role: "help",
+    submenu: [
+      {
+        label: "Learn More",
+        click: async () => {
+          await shell.openExternal("https://electronjs.org");
+        }
+      }
+    ]
+  }
+];
+const menu = Menu.buildFromTemplate(template);
+Menu.setApplicationMenu(menu);
 app$1.on("window-all-closed", () => {
   if (process.platform !== "darwin") {
     app$1.quit();
@@ -1525,6 +1668,19 @@ app$1.on("ready", () => {
   ipcMain.handle("delete", async (_, itemPath) => await fileApi.delete(itemPath));
   ipcMain.handle("rename", async (_, oldPath, newPath) => await fileApi.rename(oldPath, newPath));
   ipcMain.handle("copy", async (_, src2, dest) => await fileApi.copy(src2, dest));
+  ipcMain.on("show-context-menu", (event) => {
+    const menu2 = Menu.buildFromTemplate(template);
+    menu2.popup({ window: win });
+  });
+  ipcMain.handle("showOpenDialog", async (_, options) => {
+    return await dialog.showOpenDialog(win, options);
+  });
+  ipcMain.handle("showSaveDialog", async (_, options) => {
+    return await dialog.showSaveDialog(win, options);
+  });
+  ipcMain.handle("showMessageBox", async (_, options) => {
+    return await dialog.showMessageBox(win, options);
+  });
 });
 export {
   MAIN_DIST,

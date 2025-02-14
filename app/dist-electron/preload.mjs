@@ -44,6 +44,16 @@ electron.contextBridge.exposeInMainWorld(
     },
     copy(src, dest) {
       return electron.ipcRenderer.invoke("copy", src, dest);
+    },
+    // Dialog APIs
+    showOpenDialog(options) {
+      return electron.ipcRenderer.invoke("showOpenDialog", options);
+    },
+    showSaveDialog(options) {
+      return electron.ipcRenderer.invoke("showSaveDialog", options);
+    },
+    showMessageBox(options) {
+      return electron.ipcRenderer.invoke("showMessageBox", options);
     }
   }
 );
