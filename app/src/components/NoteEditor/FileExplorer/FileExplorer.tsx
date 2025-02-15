@@ -2,16 +2,6 @@ import * as React from 'react';
 import clsx from 'clsx';
 import { animated, useSpring } from '@react-spring/web';
 import { styled, alpha } from '@mui/material/styles';
-// icons ---------------- 
-import ArticleIcon from '@mui/icons-material/Article';
-import DeleteIcon from '@mui/icons-material/Delete';
-import FolderOpenIcon from '@mui/icons-material/FolderOpen';
-import FolderRounded from '@mui/icons-material/FolderRounded';
-import ImageIcon from '@mui/icons-material/Image';
-import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
-import VideoCameraBackIcon from '@mui/icons-material/VideoCameraBack';
-// -----------------------
-
 import Box from '@mui/material/Box';
 import Collapse from '@mui/material/Collapse';
 import Typography from '@mui/material/Typography';
@@ -30,8 +20,50 @@ import { TreeItem2Icon } from '@mui/x-tree-view/TreeItem2Icon';
 import { TreeItem2Provider } from '@mui/x-tree-view/TreeItem2Provider';
 import { TreeItem2DragAndDropOverlay } from '@mui/x-tree-view/TreeItem2DragAndDropOverlay';
 import { SvgIconComponent } from '@mui/icons-material';
-import { FileType, SAMPLE_ITEMS, FileItem, loadDirectoryContents } from './loadFiles';
 
+// icons ---------------- 
+import ArticleIcon from '@mui/icons-material/Article';
+import DeleteIcon from '@mui/icons-material/Delete';
+import FolderOpenIcon from '@mui/icons-material/FolderOpen';
+import FolderRounded from '@mui/icons-material/FolderRounded';
+import ImageIcon from '@mui/icons-material/Image';
+import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
+import VideoCameraBackIcon from '@mui/icons-material/VideoCameraBack';
+// -----------------------
+
+import { FileType, FileItem, loadDirectoryContents, createFile, createDirectory, deleteItem } from './loadFiles';
+import { constants } from 'node:buffer';
+
+interface CustomLabelProps {
+  icon?: SvgIconComponent;
+  expandable?: boolean;
+  children?: React.ReactNode;
+}
+
+interface CustomTreeItemProps extends Omit<TreeItem2Props, 'label'> {
+  id?: string;
+  itemId: string;
+  label?: React.ReactNode;
+  disabled?: boolean;
+  children?: React.ReactNode;
+  className?: string;
+}
+
+interface TransitionProps {
+  in?: boolean;
+  className?: string;
+  style?: React.CSSProperties;
+  children?: React.ReactNode;
+}
+
+interface MultiSelectFileExplorerProps {
+  defaultExpandedItems?: string[];
+  onSelectionChange?: (selectedItems: string[]) => void;
+  onItemsChange?: (items: FileItem[]) => void;
+}
+
+// ------------- components ----------------
+const AnimatedCollapse = animated(Collapse);
 function DotIcon() {
   return (
     <Box
@@ -105,14 +137,7 @@ const CustomTreeItemContent = styled(TreeItem2Content)(({ theme }) => ({
   },
 }));
 
-const AnimatedCollapse = animated(Collapse);
 
-interface TransitionProps {
-  in?: boolean;
-  className?: string;
-  style?: React.CSSProperties;
-  children?: React.ReactNode;
-}
 
 function TransitionComponent(props: TransitionProps) {
   const style = useSpring({
@@ -131,11 +156,6 @@ const StyledTreeItemLabelText = styled(Typography)({
   fontWeight: 500,
 });
 
-interface CustomLabelProps {
-  icon?: SvgIconComponent;
-  expandable?: boolean;
-  children?: React.ReactNode;
-}
 
 function CustomLabel({ icon: Icon, expandable, children, ...other }: CustomLabelProps) {
   return (
@@ -161,42 +181,6 @@ function CustomLabel({ icon: Icon, expandable, children, ...other }: CustomLabel
   );
 }
 
-const isExpandable = (reactChildren: React.ReactNode): boolean => {
-  if (Array.isArray(reactChildren)) {
-    return reactChildren.length > 0 && reactChildren.some(isExpandable);
-  }
-  return Boolean(reactChildren);
-};
-
-const getIconFromFileType = (fileType: FileType) => {
-  switch (fileType) {
-    case 'image':
-      return ImageIcon;
-    case 'pdf':
-      return PictureAsPdfIcon;
-    case 'doc':
-      return ArticleIcon;
-    case 'video':
-      return VideoCameraBackIcon;
-    case 'folder':
-      return FolderRounded;
-    case 'pinned':
-      return FolderOpenIcon;
-    case 'trash':
-      return DeleteIcon;
-    default:
-      return ArticleIcon;
-  }
-};
-  
-interface CustomTreeItemProps extends Omit<TreeItem2Props, 'label'> {
-  id?: string;
-  itemId: string;
-  label?: React.ReactNode;
-  disabled?: boolean;
-  children?: React.ReactNode;
-  className?: string;
-}
 
 const CustomTreeItem = React.forwardRef<HTMLLIElement, CustomTreeItemProps>(
   function CustomTreeItem(props: CustomTreeItemProps, ref) {
@@ -261,12 +245,37 @@ const CustomTreeItem = React.forwardRef<HTMLLIElement, CustomTreeItemProps>(
     );
   }
 );
+// ------------- end components ----------------
 
-interface MultiSelectFileExplorerProps {
-    defaultExpandedItems?: string[];
-    onSelectionChange?: (selectedItems: string[]) => void;
-    onItemsChange?: (items: FileItem[]) => void;
-}
+// ------------- logic ----------------
+
+const isExpandable = (reactChildren: React.ReactNode): boolean => {
+  if (Array.isArray(reactChildren)) {
+    return reactChildren.length > 0 && reactChildren.some(isExpandable);
+  }
+  return Boolean(reactChildren);
+};
+
+const getIconFromFileType = (fileType: FileType) => {
+  switch (fileType) {
+    case 'image':
+      return ImageIcon;
+    case 'pdf':
+      return PictureAsPdfIcon;
+    case 'doc':
+      return ArticleIcon;
+    case 'video':
+      return VideoCameraBackIcon;
+    case 'folder':
+      return FolderRounded;
+    case 'pinned':
+      return FolderOpenIcon;
+    case 'trash':
+      return DeleteIcon;
+    default:
+      return ArticleIcon;
+  }
+};
 
 export default function MultiSelectFileExplorer({
     defaultExpandedItems = ['1', '1.1'],
@@ -274,71 +283,11 @@ export default function MultiSelectFileExplorer({
     onItemsChange,
   }: MultiSelectFileExplorerProps) {
   const [selectedItems, setSelectedItems] = React.useState<string[]>([]);
-  const [items, setItems] = React.useState(SAMPLE_ITEMS);
+  const [items, setItems] = React.useState<FileItem[]>([]);
 
   const handleContextMenu = async (event: React.MouseEvent) => {
     event.preventDefault();
-    window.electronApi.send('show-context-menu');
-  };
-
-  const handleOpenFolder = async (dialogResult: { canceled: boolean; filePaths: string[] }) => {
-    if (!dialogResult.canceled && dialogResult.filePaths.length > 0) {
-      const folderPath = dialogResult.filePaths[0];
-      const contents = await loadDirectoryContents(folderPath);
-      
-      const newFolder = {
-        id: folderPath,
-        label: folderPath.split('/').pop() || folderPath,
-        fileType: 'folder' as const,
-        children: contents
-      };
-
-      setItems(prevItems => [...prevItems, newFolder]);
-      onItemsChange?.([...items, newFolder]);
-    }
-  };
-
-  const handleNewFile = async (dialogResult: { canceled: boolean; filePath?: string }) => {
-    if (!dialogResult.canceled && dialogResult.filePath) {
-      await window.electronApi.writeFile(dialogResult.filePath, '');
-      const fileName = dialogResult.filePath.split('/').pop() || dialogResult.filePath;
-      
-      const newFile = {
-        id: dialogResult.filePath,
-        label: fileName,
-        fileType: getFileType(fileName)
-      };
-
-      setItems(prevItems => [...prevItems, newFile]);
-      onItemsChange?.([...items, newFile]);
-    }
-  };
-
-  const handleNewFolder = async (dialogResult: { canceled: boolean; filePath?: string }) => {
-    if (!dialogResult.canceled && dialogResult.filePath) {
-      await window.electronApi.mkdir(dialogResult.filePath);
-      const folderName = dialogResult.filePath.split('/').pop() || dialogResult.filePath;
-      
-      const newFolder = {
-        id: dialogResult.filePath,
-        label: folderName,
-        fileType: 'folder' as const,
-        children: []
-      };
-
-      setItems(prevItems => [...prevItems, newFolder]);
-      onItemsChange?.([...items, newFolder]);
-    }
-  };
-
-  const handleDelete = async (result: { response: number }) => {
-    if (result.response === 0 && selectedItems.length > 0) {
-      await Promise.all(selectedItems.map(itemId => window.electronApi.delete(itemId)));
-      
-      setItems(prevItems => prevItems.filter(item => !selectedItems.includes(item.id)));
-      onItemsChange?.(items.filter(item => !selectedItems.includes(item.id)));
-      setSelectedItems([]);
-    }
+    window.IpcApi.send('show-context-menu');
   };
 
   const getFileType = (fileName: string): FileType => {
@@ -364,51 +313,170 @@ export default function MultiSelectFileExplorer({
         return 'doc';
     }
   };
+  const sortItems = (items: FileItem[]): FileItem[] => {
+    return items.sort((a, b) => {
+      // First sort by type (folders first)
+      if ((a.fileType === 'folder') !== (b.fileType === 'folder')) {
+        return a.fileType === 'folder' ? -1 : 1;
+      }
+      // Then sort alphabetically by label
+      return a.label.localeCompare(b.label);
+    }).map(item => {
+      // Recursively sort children if they exist
+      if (item.fileType === 'folder' && item.children) {
+        return {
+          ...item,
+          children: sortItems(item.children)
+        };
+      }
+      return item;
+    });
+  };
 
+  const updateItemsRecursively = (items: FileItem[], parentPath: string, newFile: FileItem): FileItem[] => {
+    return items.map(item => {
+      if (item.fileType === 'folder' && item.id === parentPath) {
+        return {
+          ...item,
+          children: [...(item.children || []), newFile]
+        };
+      } else if (item.children) {
+        return {
+          ...item,
+          children: updateItemsRecursively(item.children, parentPath, newFile)
+        };
+      }
+      return item;
+    });
+  };
+  const handleOpenFolder = React.useCallback(async (dialogResult: { canceled: boolean; filePaths: string[] }) => {
+    if (!dialogResult.canceled && dialogResult.filePaths.length > 0) {
+      const folderPath = dialogResult.filePaths[0];
+      const contents = await loadDirectoryContents(folderPath);
+      
+      const newFolder = {
+        id: folderPath,
+        label: folderPath,
+        fileType: 'folder' as const,
+        children: sortItems(contents)
+      };
+
+      setItems([newFolder]);
+      onItemsChange?.([newFolder]);
+    }
+  }, [onItemsChange]);
+
+  const handleNewFile = React.useCallback(async (dialogResult: { canceled: boolean; filePath?: string }) => {
+    if (!dialogResult.canceled && dialogResult.filePath !== undefined) {
+      await createFile(dialogResult.filePath, '');
+      const fileName = await window.FileApi.pathBasename(dialogResult.filePath);
+      const parentPath = await window.FileApi.pathDirname(dialogResult.filePath);
+      const newFile:FileItem = {
+        id: dialogResult.filePath,
+        label: fileName,
+        fileType: getFileType(fileName)
+      };
+      setItems(prevItems => {
+        const newItems = updateItemsRecursively(prevItems, parentPath, newFile);
+        onItemsChange?.(newItems);
+        return sortItems(newItems);
+      });
+    }
+  }, [onItemsChange]);
+
+  const handleNewFolder = React.useCallback(async (dialogResult: { canceled: boolean; filePath?: string }) => {
+    if (!dialogResult.canceled && dialogResult.filePath) {
+      createDirectory(dialogResult.filePath);
+      const folderName = await window.FileApi.pathBasename(dialogResult.filePath);
+      const parentPath = await window.FileApi.pathDirname(dialogResult.filePath);
+      const newFolder:FileItem = {
+        id: dialogResult.filePath,
+        label: folderName,
+        fileType: 'folder' as const,
+        children: []
+      };
+
+      setItems(prevItems => {
+        const newItems = updateItemsRecursively(prevItems, parentPath, newFolder);
+        onItemsChange?.(newItems);
+        return sortItems(newItems);
+      });
+    }
+  }, [onItemsChange]);
+
+  const handleDeleteOperation = React.useCallback(async (result: { response: number }) => {
+    console.log("Delete operation triggered with result:", result);
+    console.log("Selected items:", selectedItems);
+    if (result.response === 0 && selectedItems.length > 0) {
+      await Promise.all(selectedItems.map(itemId => deleteItem(itemId)));
+      setItems(prevItems => {
+        const newItems = prevItems.filter(item => !selectedItems.includes(item.id));
+        setItems(newItems);
+        onItemsChange?.(newItems);
+        console.log("Items deleted successfully", newItems);
+        return newItems;
+      });
+      setSelectedItems([]);
+    }
+  }, [selectedItems, onItemsChange]);
+  const subscription = React.useRef<{ channel: string; listener: any }[]>([]);
   React.useEffect(() => {
+    if (subscription) {
+      subscription.current.forEach(({ channel, listener }) => {
+        window.IpcApi.off(channel, listener);
+      });
+      console.log("Unsubscribed from IPC events");
+    }
+    subscription.current = [];
     const handlers = {
       folderOpen: (...args: unknown[]) => {
         const dialogResult = args[0] as { canceled: boolean; filePaths: string[] };
+        console.log("Folder open dialog completed", dialogResult);
         void handleOpenFolder(dialogResult);
       },
       newFile: (...args: unknown[]) => {
         const dialogResult = args[0] as { canceled: boolean; filePath?: string };
+        console.log("New file dialog completed", dialogResult);
         void handleNewFile(dialogResult);
       },
       newFolder: (...args: unknown[]) => {
         const dialogResult = args[0] as { canceled: boolean; filePath?: string };
+        console.log("New folder dialog completed", dialogResult);
         void handleNewFolder(dialogResult);
       },
       delete: (...args: unknown[]) => {
         const result = args[0] as { response: number };
-        void handleDelete(result);
+        console.log("Delete confirmed", result);
+        void handleDeleteOperation(result);
       }
     };
-
-    window.electronApi.on('open-folder-dialog-completed', handlers.folderOpen);
-    window.electronApi.on('new-file-dialog-completed', handlers.newFile);
-    window.electronApi.on('new-folder-dialog-completed', handlers.newFolder);
-    window.electronApi.on('delete-confirmed', handlers.delete);
-
+    subscription.current.push( { channel: 'open-folder-dialog-completed', listener: window.IpcApi.on('open-folder-dialog-completed', handlers.folderOpen) });
+    subscription.current.push( { channel: 'new-file-dialog-completed', listener: window.IpcApi.on('new-file-dialog-completed', handlers.newFile) });
+    subscription.current.push( { channel: 'new-folder-dialog-completed', listener: window.IpcApi.on('new-folder-dialog-completed', handlers.newFolder) });
+    subscription.current.push( { channel: 'delete-confirmed', listener: window.IpcApi.on('delete-confirmed', handlers.delete) });
+    console.log("Subscribed to IPC events", subscription.current);
     return () => {
-      window.electronApi.off('open-folder-dialog-completed', handlers.folderOpen);
-      window.electronApi.off('new-file-dialog-completed', handlers.newFile);
-      window.electronApi.off('new-folder-dialog-completed', handlers.newFolder);
-      window.electronApi.off('delete-confirmed', handlers.delete);
+      window.IpcApi.off('open-folder-dialog-completed', handlers.folderOpen);
+      window.IpcApi.off('new-file-dialog-completed', handlers.newFile);
+      window.IpcApi.off('new-folder-dialog-completed', handlers.newFolder);
+      window.IpcApi.off('delete-confirmed', handlers.delete);
     };
-  }, [items, selectedItems]);
-  
+  }, [handleDeleteOperation, handleNewFile, handleNewFolder, handleOpenFolder]);
+
   const handleSelectionChange = (event: React.SyntheticEvent, itemIds: string[]) => {
+    console.log("selection changed, original", selectedItems, "new", itemIds);
     setSelectedItems(itemIds);
     onSelectionChange?.(itemIds);
   };
-
+// ------------- end logic ----------------
   return (
     <Box onContextMenu={handleContextMenu}>
       <RichTreeView
         items={items}
         defaultExpandedItems={defaultExpandedItems}
         multiSelect
+        isItemEditable={(item)=>item!=items[0]}
+        experimentalFeatures={{ labelEditing: true }}
         selectedItems={selectedItems}
         onSelectedItemsChange={handleSelectionChange}
         sx={{ 

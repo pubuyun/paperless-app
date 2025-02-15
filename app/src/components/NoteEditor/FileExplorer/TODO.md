@@ -1,0 +1,5 @@
+- [x] fix NewFolder/NewFile \ 
+- [ ] open the same folder every time starting\
+- [ ] rename (editable except root) \
+- [ ] copy&paste (multiselection supported) \
+- [ ] fix select all

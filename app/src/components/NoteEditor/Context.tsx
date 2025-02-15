@@ -117,7 +117,7 @@ export default function DraggableTabsList() {
           <Stack direction="column">{_renderTabListWrappedInDroppable()}</Stack>
         </Box>
         {tabs.map((tab, index) => (
-          <TabPanel value={tab.value} key={index}>
+          <TabPanel value={tab.value} key={index} sx={{ padding: '2px' }}>
             <Tiptap content={tab.content} />
           </TabPanel>
         ))}

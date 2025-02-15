@@ -1,7 +1,7 @@
 "use strict";
 const electron = require("electron");
 electron.contextBridge.exposeInMainWorld(
-  "electronApi",
+  "IpcApi",
   {
     on(channel, func) {
       const subscription = (_event, ...args) => func(...args);
@@ -17,6 +17,14 @@ electron.contextBridge.exposeInMainWorld(
     invoke(channel, ...args) {
       return electron.ipcRenderer.invoke(channel, ...args);
     },
+    mainsend(channel, ...args) {
+      return electron.ipcRenderer.invoke("mainsend", channel, ...args);
+    }
+  }
+);
+electron.contextBridge.exposeInMainWorld(
+  "FileApi",
+  {
     // File system APIs
     readFile(filePath) {
       return electron.ipcRenderer.invoke("readFile", filePath);
@@ -54,6 +62,39 @@ electron.contextBridge.exposeInMainWorld(
     },
     showMessageBox(options) {
       return electron.ipcRenderer.invoke("showMessageBox", options);
+    },
+    // Path APIs
+    pathJoin(...paths) {
+      return electron.ipcRenderer.invoke("pathjoin", ...paths);
+    },
+    pathDirname(filePath) {
+      return electron.ipcRenderer.invoke("pathdirname", filePath);
+    },
+    pathBasename(filePath) {
+      return electron.ipcRenderer.invoke("pathbasename", filePath);
+    },
+    pathNormalize(filePath) {
+      return electron.ipcRenderer.invoke("pathnormalize", filePath);
+    }
+  }
+);
+electron.contextBridge.exposeInMainWorld(
+  "storeApi",
+  {
+    set(key, value) {
+      return electron.ipcRenderer.invoke("setStore", key, value);
+    },
+    get(key) {
+      return electron.ipcRenderer.invoke("getStore", key);
+    },
+    delete(key) {
+      return electron.ipcRenderer.invoke("deleteStore", key);
+    },
+    clear() {
+      return electron.ipcRenderer.invoke("clearStore");
+    },
+    has(key) {
+      return electron.ipcRenderer.invoke("storeHas", key);
     }
   }
 );
