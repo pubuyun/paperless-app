@@ -410,7 +410,24 @@ export default function MultiSelectFileExplorer({
     if (result.response === 0 && selectedItems.length > 0) {
       await Promise.all(selectedItems.map(itemId => deleteItem(itemId)));
       setItems(prevItems => {
-        const newItems = prevItems.filter(item => !selectedItems.includes(item.id));
+        const deleteItemsRecursively = (items: FileItem[], deletingIds: string[]): FileItem[] => {
+          return items.reduce((acc, item) => {
+            if (deletingIds.includes(item.id)) {
+              return acc;
+            }
+            if (item.children) {
+              return [
+                ...acc,
+                {
+                  ...item,
+                  children: deleteItemsRecursively(item.children, deletingIds)
+                }
+              ];
+            }
+            return [...acc, item];
+          }, [] as FileItem[]);
+        };
+        const newItems = deleteItemsRecursively(prevItems, selectedItems);
         setItems(newItems);
         onItemsChange?.(newItems);
         console.log("Items deleted successfully", newItems);
