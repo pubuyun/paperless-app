@@ -1,12 +1,5 @@
 from openai import OpenAI
 
-from datetime import datetime
-import os
-
-# this will be the AQA english analysis and feedback testing agent
-# oxford AQA iGCSE English Literature
-# Grade essays with deatiled feedback for AQA iGCSE
-#meta prompt will be the template for now
 def getApiKey():
     """
     gets api key from apiKey.config, starts with main:
@@ -60,41 +53,33 @@ def writeMdFile(filepath, content):
         print(f"Error writing to file: {e}")
         return False
 
-def clearMdFile(filepath):
-    """
-    Clears MD file content while backing up existing content
-    Args:
-        filepath: Path to markdown file
-    Returns:
-        bool: Success status
-    """
-    try:
-        if os.path.exists(filepath):
-            with open(filepath, 'r', encoding='utf-8') as file:
-                content = file.read()
-                if content.strip():
-                    # Create backup with timestamp
-                    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-                    backup_path = f"{filepath[:-3]}_{timestamp}.md"
-                    with open(backup_path, 'w', encoding='utf-8') as backup:
-                        backup.write(content)
-                        print(f"Backup created: {backup_path}")
-        # Clear original file
-        with open(filepath, 'w', encoding='utf-8') as file:
-            file.write('')
-            print(f"File cleared: {filepath}")
-        return True
-    except Exception as e:
-        print(f"Error clearing file {filepath}: {e}")
-        return False
+
+#FINETUNE
+openai.api_key = getApiKey()
+openai.api_base = getBaseUrl()
+# files
+def files():
+    resp = openai.File.create(
+        file=open("mydata.jsonl", "rb"),
+        purpose='fine-tune'
+    )
+    print(resp)
+# jobs
+def jobs(file_id):
+    resp = openai.FineTuningJob.create(training_file=file_id, model="gpt-4o-mini")   #训练文件的id要从上一步获取得到
+    print(resp)
+# retrieve
+def retrieve(ftid):
+    resp = openai.FineTuningJob.retrieve(ftid)    #微调任务id要从上一步获取得到
+    print(resp)
 
 
-#deepseek-reasoner, gpt-4o or gpt-4o-mini
-def getCompletion(model, prompt, system_prompt, output_path):
+
+
+def getCompletion(prompt, system_prompt, output_path):
     """
     Get completion from OpenAI API
     Args:
-        model: Model to use for completion -> String
         prompt: User input prompt
         system_prompt: System input prompt
         output_path: Path to save output
@@ -126,6 +111,10 @@ def getCompletion(model, prompt, system_prompt, output_path):
     #     }
     # ]
 
+
+    # model = "gpt-4"
+    # model = "gpt-4o-mini"
+    model = "deepseek-reasoner"
     try:
         response = client.chat.completions.create(
             model=model,
@@ -136,14 +125,20 @@ def getCompletion(model, prompt, system_prompt, output_path):
             #tools=tools,
             stream=True,
         )
+
         for chunk in response:
             if chunk.choices:
                 writeMdFile(output_path, chunk.choices[0].delta.content or "")
-        print(f"File writing ended: {output_path}")
+
+    
     except Exception as e:
         print(f"Error: {e}")
 
 def main():
+    files() # get print id
+
+
+
     inputFilePath = "input.md"
     outputFilePath = "output.md"
     promptOutputFilePath = "promptOutput.md"
@@ -152,20 +147,25 @@ def main():
     metaPrompt = readMdFile("prompts/metaPrompt.md")
 
     generatePrompt = False
-    generatePromptPreText = "a speech opposing the Marshall Plan, the speaker is a US congress man. Use all perspectives and arguments to oppose this plan. Do not overuse terms, this is a casual debate and should be focused on the essence of the argument point and not how it  is presented."
-    userPrompting = True
-    # you should always use R1 for generating prompts that require good formatting and examples ex.marking/giving feedback.
-    # you should use 4omini for generating prompts that are more general and you need to follow the constraints
-    # answers you can  ask both then combine or let user choose one
+    generatePromptPreText = ""
+    userPrompting = False
+    
+
+   
+
     if generatePrompt:
         #get generated prompt
-        clearMdFile(promptOutputFilePath)
-        getCompletion("gpt-4o-mini", "new prompt:" + generatePromptPreText,metaPrompt, promptOutputFilePath)
+        getCompletion("new prompt:" + generatePromptPreText,aqaPrompt, promptOutputFilePath)
+        
+
+    
     if userPrompting:
         userPrompt = readMdFile(inputFilePath)
-        clearMdFile(outputFilePath)
-        getCompletion("deepseek-reasoner", userPrompt, readMdFile(promptOutputFilePath), outputFilePath)
-
+        if userPrompt is None:
+            print("Input file empty")
+            return
+        getCompletion(userPrompt, readMdFile(promptOutputFilePath), outputFilePath)
+    
 
 
 
