@@ -8,7 +8,7 @@ import DraggableTab from "./DraggableTab";
 import Tab from "@mui/material/Tab";
 import Stack from "@mui/material/Stack";
 import CloseIcon from '@mui/icons-material/Close';
-import Tiptap from './Editor';
+import Tiptap from './Tiptap/Editor';
 import './Context.scss'
 
 export default function DraggableTabsList() {
@@ -49,6 +49,7 @@ export default function DraggableTabsList() {
       onChange={handleChange}
       aria-label="Draggable Tabs"
       variant="scrollable"
+      sx={{ overflowX: "auto", WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none', maxWidth: '100%' }}
     >
       {tabs.map((tab, index) => {
         const child = <Tab 
@@ -111,7 +112,7 @@ export default function DraggableTabsList() {
   );
 
   return (
-    <Box sx={{ width: "100%", typography: "body1" }}>
+    <Box sx={{ minWidth: "0", typography: "body1", flex: 1 }}>
       <TabContext value={activeValue}>
         <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
           <Stack direction="column">{_renderTabListWrappedInDroppable()}</Stack>

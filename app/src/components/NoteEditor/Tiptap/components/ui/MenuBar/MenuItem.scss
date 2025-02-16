@@ -2,7 +2,7 @@
   background-color: transparent;
   border: none;
   border-radius: 0.4rem;
-  color: var(--color-teritary);
+  color: var(--color-secondary-light);
   cursor: pointer;
   height: 1.75rem;
   margin-right: 0.25rem;
@@ -17,6 +17,6 @@
 
   &:hover,
   &.is-active {
-    background-color: var(--color-secondary-light);
+    background-color: var(--color-primary-light);
   }
 }
