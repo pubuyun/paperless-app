@@ -3,3 +3,5 @@
 - [ ] rename (editable except root) \
 - [ ] copy&paste (multiselection supported) \
 - [ ] fix select all
+- [ ] add obsidian features like internal links
+- [ ] obsidian-like css snippets feature
