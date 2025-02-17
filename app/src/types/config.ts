@@ -1,8 +1,7 @@
 export interface ComponentConfig {
   id: string;
   name: string;
-  panelComponent: string;  // Path to panel component
-  contextComponent: string;  // Path to context component
+  Component: string; // path to component
   button: {
     icon: string;  // Icon name from @mui/icons-material
     label: string;

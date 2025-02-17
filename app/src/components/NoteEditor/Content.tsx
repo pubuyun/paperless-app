@@ -12,20 +12,19 @@ import CloseIcon from '@mui/icons-material/Close';
 import { Crepe } from '@milkdown/crepe';
 import "@milkdown/crepe/theme/common/style.css";
 import "@milkdown/crepe/theme/frame.css";
+import { TabData } from "./main";
+import './Content.css';
 
-export default function DraggableTabsList() {
-  const [activeValue, setActiveValue] = React.useState("1");
+interface DraggableTabsListProps {
+  tabs: TabData[];
+  setTabs: React.Dispatch<React.SetStateAction<TabData[]>>;
+  activeValue: string;
+  setActiveValue: React.Dispatch<React.SetStateAction<string>>;
+}
+export default function DraggableTabsList(props: DraggableTabsListProps) {
+  const { tabs, setTabs } = props;
+  const { activeValue, setActiveValue } = props;
   const editorsRef = useRef<Map<string, Crepe>>(new Map());
-
-  const [tabs, setTabs] = React.useState(
-    [...Array(10)].map((_, index) => ({
-      id: `tab${index + 1}`,
-      label: `Tab ${index + 1}`,
-      value: `${index + 1}`,
-      content: `Content ${index + 1}`
-    }))
-  );
-
   
   useEffect(() => {
     // Initialize or switch editor when active tab changes
@@ -47,6 +46,7 @@ export default function DraggableTabsList() {
         defaultValue: tab.content || '# Untitled',
       });
       editor.on(listener => {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         listener.markdownUpdated((ctx, markdown, prevMarkdown) => {
             tab.content = markdown;
           }
@@ -108,6 +108,7 @@ export default function DraggableTabsList() {
       onChange={handleChange}
       aria-label="Draggable Tabs"
       variant="scrollable"
+      className="draggable-tabs"
       sx={{ overflowX: "auto", WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none', maxWidth: '100%' }}
     >
       {tabs.map((tab, index) => {
@@ -171,13 +172,13 @@ export default function DraggableTabsList() {
   );
 
   return (
-    <Box sx={{ minWidth: "0", typography: "body1", flex: 1 }}>
+    <Box sx={{ minWidth: "0", typography: "body1", flex: 1 }} className="content-area">
       <TabContext value={activeValue}>
         <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
           <Stack direction="column">{_renderTabListWrappedInDroppable()}</Stack>
         </Box>
         {tabs.map((tab, index) => (
-          <TabPanel value={tab.value} key={index} sx={{ padding: '2px', maxHeight: 'calc(100vh - 48px)', overflow: 'scroll' }}>
+          <TabPanel value={tab.value} key={index} sx={{ padding: '2px' }}>
             <div 
               id={`editor-${tab.value}`}
               className="outerEditor"

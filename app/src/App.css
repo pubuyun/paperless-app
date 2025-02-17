@@ -3,12 +3,4 @@
     height: 100vh;
     width: 100vw;
   }
-  .content-area {
-    flex: 1;
-    display: flex;
-  }
-  .content-area > div {
-    flex: 1;
-    padding: 16px;
-  }
   

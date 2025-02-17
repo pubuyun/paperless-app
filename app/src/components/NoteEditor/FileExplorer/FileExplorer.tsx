@@ -59,6 +59,9 @@ interface MultiSelectFileExplorerProps {
   defaultExpandedItems?: string[];
   onSelectionChange?: (selectedItems: string[]) => void;
   onItemsChange?: (items: FileItem[]) => void;
+  onDoubleClick?: (clickedItems: string[]) => void;
+  items: FileItem[];
+  setItems: React.Dispatch<React.SetStateAction<FileItem[]>>;
 }
 
 // ------------- components ----------------
@@ -280,9 +283,11 @@ export default function MultiSelectFileExplorer({
     defaultExpandedItems = ['1', '1.1'],
     onSelectionChange,
     onItemsChange,
+    onDoubleClick,
+    items,
+    setItems,
   }: MultiSelectFileExplorerProps) {
   const [selectedItems, setSelectedItems] = React.useState<string[]>([]);
-  const [items, setItems] = React.useState<FileItem[]>([]);
 
   const handleContextMenu = async (event: React.MouseEvent) => {
     event.preventDefault();
@@ -476,7 +481,7 @@ export default function MultiSelectFileExplorer({
   };
 // ------------- end logic ----------------
   return (
-    <Box onContextMenu={handleContextMenu}>
+    <Box onContextMenu={handleContextMenu} className="file-explorer">
       <RichTreeView
         items={items}
         defaultExpandedItems={defaultExpandedItems}
@@ -484,6 +489,7 @@ export default function MultiSelectFileExplorer({
         isItemEditable={(item)=>item!=items[0]}
         experimentalFeatures={{ labelEditing: true }}
         selectedItems={selectedItems}
+        onDoubleClick={onDoubleClick ? (event) => onDoubleClick([selectedItems[0]]) : undefined}
         onSelectedItemsChange={handleSelectionChange}
         sx={{ 
           height: 'fit-content', 
