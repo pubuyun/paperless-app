@@ -32,7 +32,6 @@ import VideoCameraBackIcon from '@mui/icons-material/VideoCameraBack';
 // -----------------------
 
 import { FileType, FileItem, loadDirectoryContents, createFile, createDirectory, deleteItem } from './loadFiles';
-import { constants } from 'node:buffer';
 
 interface CustomLabelProps {
   icon?: SvgIconComponent;
@@ -436,6 +435,7 @@ export default function MultiSelectFileExplorer({
       setSelectedItems([]);
     }
   }, [selectedItems, onItemsChange]);
+  /*eslint-disable-next-line */
   const subscription = React.useRef<{ channel: string; listener: any }[]>([]);
   React.useEffect(() => {
     if (subscription) {
@@ -473,10 +473,9 @@ export default function MultiSelectFileExplorer({
     subscription.current.push( { channel: 'delete-confirmed', listener: window.IpcApi.on('delete-confirmed', handlers.delete) });
     console.log("Subscribed to IPC events", subscription.current);
     return () => {
-      window.IpcApi.off('open-folder-dialog-completed', handlers.folderOpen);
-      window.IpcApi.off('new-file-dialog-completed', handlers.newFile);
-      window.IpcApi.off('new-folder-dialog-completed', handlers.newFolder);
-      window.IpcApi.off('delete-confirmed', handlers.delete);
+      subscription.current.forEach(({ channel, listener }) => {
+        window.IpcApi.off(channel, listener);
+      });
     };
   }, [handleDeleteOperation, handleNewFile, handleNewFolder, handleOpenFolder]);
 

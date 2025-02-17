@@ -145,7 +145,17 @@ export default function MenuBar ({ editor }: { editor: Editor}) {
   ]
 
   return (
-    <div className="editor__header">
+    /*align-items: center;
+background: var(--color-secondary-dark);
+border-top: 3px solid var(--color-secondary-dark);
+border-bottom-left-radius: 0.25rem;
+border-bottom-right-radius: 0.25rem;
+display: flex;
+z-index: 100;
+flex: 0 0 auto;
+flex-wrap: wrap;
+padding: 0.25rem;*/
+    <div className="menu-bar items-center bg-gray-300 border-t-[3px] border-t-gray-300 rounded-bl rounded-br flex z-100 flex-none flex-wrap p-1 ">
       {items.map((item, index) => (
         <Fragment key={index}>
           {item.type === 'divider' ? (
