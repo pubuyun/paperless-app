@@ -4,7 +4,7 @@ const config: ComponentConfig = {
   id: 'NoteEditor',
   name: 'Note Editor',
   panelComponent: 'Panel',
-  contextComponent: 'Context',
+  contextComponent: 'Content',
   button: {
     icon: 'FolderOutlined',
     label: 'Explorer',

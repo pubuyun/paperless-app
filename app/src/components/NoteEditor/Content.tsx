@@ -1,4 +1,5 @@
 import * as React from "react";
+import { useEffect, useRef } from "react";
 import { Box } from "@mui/material";
 import TabContext from "@mui/lab/TabContext";
 import TabList from "@mui/lab/TabList";
@@ -8,14 +9,16 @@ import DraggableTab from "./DraggableTab";
 import Tab from "@mui/material/Tab";
 import Stack from "@mui/material/Stack";
 import CloseIcon from '@mui/icons-material/Close';
-import Tiptap from './Tiptap/Editor';
-import './Context.scss'
+import { Crepe } from '@milkdown/crepe';
+import "@milkdown/crepe/theme/common/style.css";
+import "@milkdown/crepe/theme/frame.css";
 
 export default function DraggableTabsList() {
   const [activeValue, setActiveValue] = React.useState("1");
+  const editorsRef = useRef<Map<string, Crepe>>(new Map());
 
   const [tabs, setTabs] = React.useState(
-    [...Array(55)].map((_, index) => ({
+    [...Array(10)].map((_, index) => ({
       id: `tab${index + 1}`,
       label: `Tab ${index + 1}`,
       value: `${index + 1}`,
@@ -23,16 +26,72 @@ export default function DraggableTabsList() {
     }))
   );
 
+  
+  useEffect(() => {
+    // Initialize or switch editor when active tab changes
+    // Function to initialize editor for a specific tab
+    const initEditorForTab = async (tabValue: string) => {
+      // Destroy existing editor for this tab if it exists
+      const existingEditor = editorsRef.current.get(tabValue);
+      if (existingEditor) {
+        await existingEditor.destroy();
+        editorsRef.current.delete(tabValue);
+      }
+
+      const tab = tabs.find(t => t.value === tabValue);
+      const editorRoot = document.querySelector(`#editor-${tabValue}`);
+      if (!tab || !editorRoot) return;
+
+      const editor = new Crepe({
+        root: editorRoot,
+        defaultValue: tab.content || '# Untitled',
+      });
+      editor.on(listener => {
+        listener.markdownUpdated((ctx, markdown, prevMarkdown) => {
+            tab.content = markdown;
+          }
+        )
+      })
+      await editor.create();
+      // add custom settings here
+      
+      editorsRef.current.set(tabValue, editor);
+    };
+    const timer = setTimeout(() => {
+      initEditorForTab(activeValue);
+    }, 0);
+
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [activeValue, tabs]);
+
+  // Cleanup editors when component unmounts
+  useEffect(() => {
+    return () => {
+      editorsRef.current.forEach(async (editor) => {
+        await editor.destroy();
+      });
+      editorsRef.current.clear();
+    };
+  }, []);
+
   const handleChange = (event: React.SyntheticEvent, newValue: string) => {
     setActiveValue(newValue);
   };
 
-  const handleTabClose = (tabValue: string) => {
+  const handleTabClose = async (tabValue: string) => {
+    // Destroy editor for the closed tab
+    const editor = editorsRef.current.get(tabValue);
+    if (editor) {
+      await editor.destroy();
+      editorsRef.current.delete(tabValue);
+    }
+
     const newTabs = tabs.filter((tab) => tab.value !== tabValue);
     setTabs(newTabs);
-    if (activeValue === tabValue) {
-      const newActiveIndex = tabs.findIndex((tab) => tab.value === newTabs[0].value);
-      setActiveValue(newTabs[newActiveIndex].value);
+    if (activeValue === tabValue && newTabs.length > 0) {
+      setActiveValue(newTabs[0].value);
     }
   };
 
@@ -118,8 +177,12 @@ export default function DraggableTabsList() {
           <Stack direction="column">{_renderTabListWrappedInDroppable()}</Stack>
         </Box>
         {tabs.map((tab, index) => (
-          <TabPanel value={tab.value} key={index} sx={{ padding: '2px' }}>
-            <Tiptap content={tab.content} />
+          <TabPanel value={tab.value} key={index} sx={{ padding: '2px', maxHeight: 'calc(100vh - 48px)', overflow: 'scroll' }}>
+            <div 
+              id={`editor-${tab.value}`}
+              className="outerEditor"
+              style={{ display: tab.value === activeValue ? 'block' : 'none' }}
+            />
           </TabPanel>
         ))}
       </TabContext>
