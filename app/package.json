@@ -88,6 +88,7 @@
     "tailwind-merge": "^3.0.1",
     "y-prosemirror": "^1.2.15",
     "y-protocols": "^1.0.6",
+    "yarn": "^1.22.22",
     "yjs": "^13.6.23"
   },
   "devDependencies": {
