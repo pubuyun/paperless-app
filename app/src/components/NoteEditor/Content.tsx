@@ -9,6 +9,7 @@ import DraggableTab from "./DraggableTab";
 import Tab from "@mui/material/Tab";
 import Stack from "@mui/material/Stack";
 import CloseIcon from '@mui/icons-material/Close';
+import CancelIcon from '@mui/icons-material/Cancel';
 import { Crepe } from '@milkdown/crepe';
 import "@milkdown/crepe/theme/common/style.css";
 import "@milkdown/crepe/theme/frame.css";
@@ -49,12 +50,13 @@ export default function DraggableTabsList(props: DraggableTabsListProps) {
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         listener.markdownUpdated((ctx, markdown, prevMarkdown) => {
             tab.content = markdown;
+            tab.saved = false;
+            console.log("set tab content", tab.saved);  
           }
         )
       })
       await editor.create();
       // add custom settings here
-      
       editorsRef.current.set(tabValue, editor);
     };
     const timer = setTimeout(() => {
@@ -64,7 +66,7 @@ export default function DraggableTabsList(props: DraggableTabsListProps) {
     return () => {
       clearTimeout(timer);
     };
-  }, [activeValue, tabs]);
+}, [activeValue]); // Remove tabs dependency
 
   // Cleanup editors when component unmounts
   useEffect(() => {
@@ -121,7 +123,7 @@ export default function DraggableTabsList(props: DraggableTabsListProps) {
             e.stopPropagation();
             handleTabClose(tab.value);
           }}>
-            <CloseIcon />
+            {tab.saved ? <CloseIcon fontSize="small" /> : <CancelIcon fontSize="small" />}
           </Box>
           }
           iconPosition="end"
@@ -172,7 +174,7 @@ export default function DraggableTabsList(props: DraggableTabsListProps) {
   );
 
   return (
-    <Box sx={{ minWidth: "0", typography: "body1", flex: 1 }} className="content-area">
+    <Box sx={{ minWidth: "0", typography: "body1", flex: 1, scrollbarWidth: 'none' }} className="content-area">
       <TabContext value={activeValue}>
         <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
           <Stack direction="column">{_renderTabListWrappedInDroppable()}</Stack>

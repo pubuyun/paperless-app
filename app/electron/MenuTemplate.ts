@@ -1,8 +1,9 @@
 import {shell, MenuItemConstructorOptions, App, dialog, BrowserWindow } from "electron"
+import Store from "electron-store"
 
 const isMac = process.platform === 'darwin';
 
-export default function getMenu(app:App, win:BrowserWindow|null) 
+export default function getMenu(app:App, win:BrowserWindow|null, store:Store) 
 {
     return [
         ...(isMac
@@ -73,6 +74,12 @@ export default function getMenu(app:App, win:BrowserWindow|null)
                   cancelId: 1
                 });
                 win.webContents.send('delete-confirmed', result);
+              }
+            },
+            {
+              label: 'Clear Cache',
+              click: async () => {
+                store.clear();
               }
             },
             isMac ? { role: 'close' } : { role: 'quit' }

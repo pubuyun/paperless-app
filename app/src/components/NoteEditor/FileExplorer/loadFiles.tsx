@@ -21,7 +21,7 @@ export interface DeleteOptions {
   force?: boolean;
 }
 
-export type FileType = 'image' | 'pdf' | 'doc' | 'video' | 'folder' | 'pinned' | 'trash';
+export type FileType = 'image' | 'pdf' | 'doc' | 'video' | 'folder' | 'pinned' | 'trash' | 'markdown';
 
 export type MetadataValue = string | number | boolean | Date | null | { [key: string]: MetadataValue };
 
@@ -303,8 +303,9 @@ async function determineFileType(filename: string, isDirectory: boolean): Promis
     case 'doc':
     case 'docx':
     case 'txt':
-    case 'md':
       return 'doc';
+    case 'md':
+      return 'markdown';
     case 'mp4':
     case 'mov':
     case 'avi':

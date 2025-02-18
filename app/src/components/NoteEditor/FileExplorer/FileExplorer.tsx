@@ -20,7 +20,6 @@ import { TreeItem2Icon } from '@mui/x-tree-view/TreeItem2Icon';
 import { TreeItem2Provider } from '@mui/x-tree-view/TreeItem2Provider';
 import { TreeItem2DragAndDropOverlay } from '@mui/x-tree-view/TreeItem2DragAndDropOverlay';
 import { SvgIconComponent } from '@mui/icons-material';
-
 // icons ---------------- 
 import ArticleIcon from '@mui/icons-material/Article';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -60,6 +59,7 @@ interface MultiSelectFileExplorerProps {
   onSelectionChange?: (selectedItems: string[]) => void;
   onItemsChange?: (items: FileItem[]) => void;
   onDoubleClick?: (clickedItems: string[]) => void;
+  onExpandedItemsChange?: (event: React.SyntheticEvent<Element, Event>, itemIds: string[]) => void;
   items: FileItem[];
   setItems: React.Dispatch<React.SetStateAction<FileItem[]>>;
 }
@@ -284,6 +284,7 @@ export default function MultiSelectFileExplorer({
     onSelectionChange,
     onItemsChange,
     onDoubleClick,
+    onExpandedItemsChange,
     items,
     setItems,
   }: MultiSelectFileExplorerProps) {
@@ -481,16 +482,17 @@ export default function MultiSelectFileExplorer({
   };
 // ------------- end logic ----------------
   return (
-    <Box onContextMenu={handleContextMenu} className="file-explorer">
+    <Box onContextMenu={handleContextMenu} className="file-explorer" sx={{ maxHeight: 'calc(100vh - 64px)', overflowY: 'scroll', scrollbarWidth: 'none' }}>
       <RichTreeView
         items={items}
-        defaultExpandedItems={defaultExpandedItems}
+        expandedItems={defaultExpandedItems}
         multiSelect
         isItemEditable={(item)=>item!=items[0]}
-        experimentalFeatures={{ labelEditing: true }}
+        experimentalFeatures={{ labelEditing: true,  }}
         selectedItems={selectedItems}
-        onDoubleClick={onDoubleClick ? (event) => onDoubleClick([selectedItems[0]]) : undefined}
+        onDoubleClick={onDoubleClick ? () => onDoubleClick([selectedItems[0]]) : undefined}
         onSelectedItemsChange={handleSelectionChange}
+        onExpandedItemsChange={onExpandedItemsChange}
         sx={{ 
           height: 'fit-content', 
           flexGrow: 1, 
