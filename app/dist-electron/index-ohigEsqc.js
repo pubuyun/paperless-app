@@ -9,1661 +9,15 @@ var __privateGet = (obj, member, getter) => (__accessCheck(obj, member, "read fr
 var __privateAdd = (obj, member, value) => member.has(obj) ? __typeError("Cannot add the same private member more than once") : member instanceof WeakSet ? member.add(obj) : member.set(obj, value);
 var __privateSet = (obj, member, value, setter) => (__accessCheck(obj, member, "write to private field"), setter ? setter.call(obj, value) : member.set(obj, value), value);
 var _validator, _encryptionKey, _options, _defaultValues;
-import electron, { BrowserWindow as BrowserWindow$1, app as app$2, dialog, shell as shell$1, Menu, ipcMain as ipcMain$1 } from "electron";
-import { promises } from "fs";
-import { createRequire } from "node:module";
-import { fileURLToPath } from "node:url";
-import path from "node:path";
 import process$1 from "node:process";
-import require$$0$1 from "tty";
-import require$$1$1 from "util";
-import os from "node:os";
-import tty from "node:tty";
+import path from "node:path";
+import electron from "electron";
 import { promisify, isDeepStrictEqual } from "node:util";
 import fs from "node:fs";
 import crypto from "node:crypto";
 import assert from "node:assert";
-const fileApi = {
-  async readFile(filePath) {
-    try {
-      return await promises.readFile(filePath, "utf-8");
-    } catch (error2) {
-      throw new Error(`Failed to read file: ${error2.message}`);
-    }
-  },
-  async writeFile(filePath, content2) {
-    try {
-      await promises.writeFile(filePath, content2, "utf-8");
-    } catch (error2) {
-      throw new Error(`Failed to write file: ${error2.message}`);
-    }
-  },
-  async readDir(dirPath) {
-    try {
-      const items2 = await promises.readdir(dirPath);
-      return items2;
-    } catch (error2) {
-      throw new Error(`Failed to read directory: ${error2.message}`);
-    }
-  },
-  async stat(itemPath) {
-    try {
-      const stats = await promises.stat(itemPath);
-      return {
-        isFile: stats.isFile(),
-        isDirectory: stats.isDirectory(),
-        size: stats.size,
-        mtime: stats.mtime,
-        ctime: stats.ctime
-      };
-    } catch (error2) {
-      throw new Error(`Failed to get item stats: ${error2.message}`);
-    }
-  },
-  async exists(itemPath) {
-    try {
-      await promises.access(itemPath);
-      return true;
-    } catch {
-      return false;
-    }
-  },
-  async mkdir(dirPath) {
-    try {
-      await promises.mkdir(dirPath, { recursive: true });
-    } catch (error2) {
-      throw new Error(`Failed to create directory: ${error2.message}`);
-    }
-  },
-  async delete(itemPath) {
-    try {
-      const stats = await promises.stat(itemPath);
-      if (stats.isDirectory()) {
-        await promises.rm(itemPath, { recursive: true });
-      } else {
-        await promises.unlink(itemPath);
-      }
-    } catch (error2) {
-      throw new Error(`Failed to delete item: ${error2.message}`);
-    }
-  },
-  async rename(oldPath, newPath) {
-    try {
-      await promises.rename(oldPath, newPath);
-    } catch (error2) {
-      throw new Error(`Failed to rename item: ${error2.message}`);
-    }
-  },
-  async copy(src2, dest) {
-    try {
-      const stats = await promises.stat(src2);
-      if (stats.isDirectory()) {
-        await promises.cp(src2, dest, { recursive: true });
-      } else {
-        await promises.copyFile(src2, dest);
-      }
-    } catch (error2) {
-      throw new Error(`Failed to copy item: ${error2.message}`);
-    }
-  }
-};
-function getDefaultExportFromCjs(x) {
-  return x && x.__esModule && Object.prototype.hasOwnProperty.call(x, "default") ? x["default"] : x;
-}
-function getAugmentedNamespace(n) {
-  if (n.__esModule) return n;
-  var f = n.default;
-  if (typeof f == "function") {
-    var a = function a2() {
-      if (this instanceof a2) {
-        return Reflect.construct(f, arguments, this.constructor);
-      }
-      return f.apply(this, arguments);
-    };
-    a.prototype = f.prototype;
-  } else a = {};
-  Object.defineProperty(a, "__esModule", { value: true });
-  Object.keys(n).forEach(function(k) {
-    var d = Object.getOwnPropertyDescriptor(n, k);
-    Object.defineProperty(a, k, d.get ? d : {
-      enumerable: true,
-      get: function() {
-        return n[k];
-      }
-    });
-  });
-  return a;
-}
-const modifiers$1 = /^(Command|Cmd|Control|Ctrl|CommandOrControl|CmdOrCtrl|Alt|Option|AltGr|Shift|Super)$/;
-const keyCodes$1 = /^([0-9A-Z)!@#$%^&*(:+<_>?~{|}";=,\-./`[\\\]']|F1*[1-9]|F10|F2[0-4]|Plus|Space|Tab|Backspace|Delete|Insert|Return|Enter|Up|Down|Left|Right|Home|End|PageUp|PageDown|Escape|Esc|VolumeUp|VolumeDown|VolumeMute|MediaNextTrack|MediaPreviousTrack|MediaStop|MediaPlayPause|PrintScreen)$/;
-var electronIsAccelerator = function(str) {
-  let parts = str.split("+");
-  let keyFound = false;
-  return parts.every((val, index) => {
-    const isKey = keyCodes$1.test(val);
-    const isModifier = modifiers$1.test(val);
-    if (isKey) {
-      if (keyFound) return false;
-      keyFound = true;
-    }
-    if (index === parts.length - 1 && !keyFound) return false;
-    return isKey || isModifier;
-  });
-};
-function _lower(key) {
-  if (typeof key !== "string") {
-    return key;
-  }
-  return key.toLowerCase();
-}
-function areEqual(ev1, ev2) {
-  if (ev1 === ev2) {
-    return true;
-  }
-  for (const prop of ["altKey", "ctrlKey", "shiftKey", "metaKey"]) {
-    const [value1, value2] = [ev1[prop], ev2[prop]];
-    if (Boolean(value1) !== Boolean(value2)) {
-      return false;
-    }
-  }
-  if (_lower(ev1.key) === _lower(ev2.key) && ev1.key !== void 0 || ev1.code === ev2.code && ev1.code !== void 0) {
-    return true;
-  }
-  return false;
-}
-var keyboardeventsAreequal = areEqual;
-const modifiers = /^(CommandOrControl|CmdOrCtrl|Command|Cmd|Control|Ctrl|AltGr|Option|Alt|Shift|Super)/i;
-const keyCodes = /^(Plus|Space|Tab|Backspace|Delete|Insert|Return|Enter|Up|Down|Left|Right|Home|End|PageUp|PageDown|Escape|Esc|VolumeUp|VolumeDown|VolumeMute|MediaNextTrack|MediaPreviousTrack|MediaStop|MediaPlayPause|PrintScreen|F24|F23|F22|F21|F20|F19|F18|F17|F16|F15|F14|F13|F12|F11|F10|F9|F8|F7|F6|F5|F4|F3|F2|F1|[0-9A-Z)!@#$%^&*(:+<_>?~{|}";=,\-./`[\\\]'])/i;
-const UNSUPPORTED = {};
-function _command(accelerator, event, modifier) {
-  if (process.platform !== "darwin") {
-    return UNSUPPORTED;
-  }
-  if (event.metaKey) {
-    throw new Error("Double `Command` modifier specified.");
-  }
-  return {
-    event: Object.assign({}, event, { metaKey: true }),
-    accelerator: accelerator.slice(modifier.length)
-  };
-}
-function _super(accelerator, event, modifier) {
-  if (event.metaKey) {
-    throw new Error("Double `Super` modifier specified.");
-  }
-  return {
-    event: Object.assign({}, event, { metaKey: true }),
-    accelerator: accelerator.slice(modifier.length)
-  };
-}
-function _commandorcontrol(accelerator, event, modifier) {
-  if (process.platform === "darwin") {
-    if (event.metaKey) {
-      throw new Error("Double `Command` modifier specified.");
-    }
-    return {
-      event: Object.assign({}, event, { metaKey: true }),
-      accelerator: accelerator.slice(modifier.length)
-    };
-  }
-  if (event.ctrlKey) {
-    throw new Error("Double `Control` modifier specified.");
-  }
-  return {
-    event: Object.assign({}, event, { ctrlKey: true }),
-    accelerator: accelerator.slice(modifier.length)
-  };
-}
-function _alt(accelerator, event, modifier) {
-  if (modifier === "option" && process.platform !== "darwin") {
-    return UNSUPPORTED;
-  }
-  if (event.altKey) {
-    throw new Error("Double `Alt` modifier specified.");
-  }
-  return {
-    event: Object.assign({}, event, { altKey: true }),
-    accelerator: accelerator.slice(modifier.length)
-  };
-}
-function _shift(accelerator, event, modifier) {
-  if (event.shiftKey) {
-    throw new Error("Double `Shift` modifier specified.");
-  }
-  return {
-    event: Object.assign({}, event, { shiftKey: true }),
-    accelerator: accelerator.slice(modifier.length)
-  };
-}
-function _control(accelerator, event, modifier) {
-  if (event.ctrlKey) {
-    throw new Error("Double `Control` modifier specified.");
-  }
-  return {
-    event: Object.assign({}, event, { ctrlKey: true }),
-    accelerator: accelerator.slice(modifier.length)
-  };
-}
-function reduceModifier({ accelerator, event }, modifier) {
-  switch (modifier) {
-    case "command":
-    case "cmd": {
-      return _command(accelerator, event, modifier);
-    }
-    case "super": {
-      return _super(accelerator, event, modifier);
-    }
-    case "control":
-    case "ctrl": {
-      return _control(accelerator, event, modifier);
-    }
-    case "commandorcontrol":
-    case "cmdorctrl": {
-      return _commandorcontrol(accelerator, event, modifier);
-    }
-    case "option":
-    case "altgr":
-    case "alt": {
-      return _alt(accelerator, event, modifier);
-    }
-    case "shift": {
-      return _shift(accelerator, event, modifier);
-    }
-    default:
-      console.error(modifier);
-  }
-}
-function reducePlus({ accelerator, event }) {
-  return {
-    event,
-    accelerator: accelerator.trim().slice(1)
-  };
-}
-const virtualKeyCodes = {
-  0: "Digit0",
-  1: "Digit1",
-  2: "Digit2",
-  3: "Digit3",
-  4: "Digit4",
-  5: "Digit5",
-  6: "Digit6",
-  7: "Digit7",
-  8: "Digit8",
-  9: "Digit9",
-  "-": "Minus",
-  "=": "Equal",
-  Q: "KeyQ",
-  W: "KeyW",
-  E: "KeyE",
-  R: "KeyR",
-  T: "KeyT",
-  Y: "KeyY",
-  U: "KeyU",
-  I: "KeyI",
-  O: "KeyO",
-  P: "KeyP",
-  "[": "BracketLeft",
-  "]": "BracketRight",
-  A: "KeyA",
-  S: "KeyS",
-  D: "KeyD",
-  F: "KeyF",
-  G: "KeyG",
-  H: "KeyH",
-  J: "KeyJ",
-  K: "KeyK",
-  L: "KeyL",
-  ";": "Semicolon",
-  "'": "Quote",
-  "`": "Backquote",
-  "/": "Backslash",
-  Z: "KeyZ",
-  X: "KeyX",
-  C: "KeyC",
-  V: "KeyV",
-  B: "KeyB",
-  N: "KeyN",
-  M: "KeyM",
-  ",": "Comma",
-  ".": "Period",
-  "\\": "Slash",
-  " ": "Space"
-};
-function reduceKey({ accelerator, event }, key) {
-  if (key.length > 1 || event.key) {
-    throw new Error(`Unvalid keycode \`${key}\`.`);
-  }
-  const code2 = key.toUpperCase() in virtualKeyCodes ? virtualKeyCodes[key.toUpperCase()] : null;
-  return {
-    event: Object.assign({}, event, { key }, code2 ? { code: code2 } : null),
-    accelerator: accelerator.trim().slice(key.length)
-  };
-}
-const domKeys = Object.assign(/* @__PURE__ */ Object.create(null), {
-  plus: "Add",
-  space: "Space",
-  tab: "Tab",
-  backspace: "Backspace",
-  delete: "Delete",
-  insert: "Insert",
-  return: "Return",
-  enter: "Return",
-  up: "ArrowUp",
-  down: "ArrowDown",
-  left: "ArrowLeft",
-  right: "ArrowRight",
-  home: "Home",
-  end: "End",
-  pageup: "PageUp",
-  pagedown: "PageDown",
-  escape: "Escape",
-  esc: "Escape",
-  volumeup: "AudioVolumeUp",
-  volumedown: "AudioVolumeDown",
-  volumemute: "AudioVolumeMute",
-  medianexttrack: "MediaTrackNext",
-  mediaprevioustrack: "MediaTrackPrevious",
-  mediastop: "MediaStop",
-  mediaplaypause: "MediaPlayPause",
-  printscreen: "PrintScreen"
-});
-for (let i = 1; i <= 24; i++) {
-  domKeys[`f${i}`] = `F${i}`;
-}
-function reduceCode({ accelerator, event }, { code: code2, key }) {
-  if (event.code) {
-    throw new Error(`Duplicated keycode \`${key}\`.`);
-  }
-  return {
-    event: Object.assign({}, event, { key }, code2 ? { code: code2 } : null),
-    accelerator: accelerator.trim().slice(key && key.length || 0)
-  };
-}
-function toKeyEvent$1(accelerator) {
-  let state = { accelerator, event: {} };
-  while (state.accelerator !== "") {
-    const modifierMatch = state.accelerator.match(modifiers);
-    if (modifierMatch) {
-      const modifier = modifierMatch[0].toLowerCase();
-      state = reduceModifier(state, modifier);
-      if (state === UNSUPPORTED) {
-        return { unsupportedKeyForPlatform: true };
-      }
-    } else if (state.accelerator.trim()[0] === "+") {
-      state = reducePlus(state);
-    } else {
-      const codeMatch = state.accelerator.match(keyCodes);
-      if (codeMatch) {
-        const code2 = codeMatch[0].toLowerCase();
-        if (code2 in domKeys) {
-          state = reduceCode(state, {
-            code: domKeys[code2],
-            key: code2
-          });
-        } else {
-          state = reduceKey(state, code2);
-        }
-      } else {
-        throw new Error(`Unvalid accelerator: "${state.accelerator}"`);
-      }
-    }
-  }
-  return state.event;
-}
-var keyboardeventFromElectronAccelerator = {
-  toKeyEvent: toKeyEvent$1
-};
-var src$1 = { exports: {} };
-var browser = { exports: {} };
-var ms;
-var hasRequiredMs;
-function requireMs() {
-  if (hasRequiredMs) return ms;
-  hasRequiredMs = 1;
-  var s = 1e3;
-  var m = s * 60;
-  var h = m * 60;
-  var d = h * 24;
-  var w = d * 7;
-  var y = d * 365.25;
-  ms = function(val, options) {
-    options = options || {};
-    var type2 = typeof val;
-    if (type2 === "string" && val.length > 0) {
-      return parse2(val);
-    } else if (type2 === "number" && isFinite(val)) {
-      return options.long ? fmtLong(val) : fmtShort(val);
-    }
-    throw new Error(
-      "val is not a non-empty string or a valid number. val=" + JSON.stringify(val)
-    );
-  };
-  function parse2(str) {
-    str = String(str);
-    if (str.length > 100) {
-      return;
-    }
-    var match = /^(-?(?:\d+)?\.?\d+) *(milliseconds?|msecs?|ms|seconds?|secs?|s|minutes?|mins?|m|hours?|hrs?|h|days?|d|weeks?|w|years?|yrs?|y)?$/i.exec(
-      str
-    );
-    if (!match) {
-      return;
-    }
-    var n = parseFloat(match[1]);
-    var type2 = (match[2] || "ms").toLowerCase();
-    switch (type2) {
-      case "years":
-      case "year":
-      case "yrs":
-      case "yr":
-      case "y":
-        return n * y;
-      case "weeks":
-      case "week":
-      case "w":
-        return n * w;
-      case "days":
-      case "day":
-      case "d":
-        return n * d;
-      case "hours":
-      case "hour":
-      case "hrs":
-      case "hr":
-      case "h":
-        return n * h;
-      case "minutes":
-      case "minute":
-      case "mins":
-      case "min":
-      case "m":
-        return n * m;
-      case "seconds":
-      case "second":
-      case "secs":
-      case "sec":
-      case "s":
-        return n * s;
-      case "milliseconds":
-      case "millisecond":
-      case "msecs":
-      case "msec":
-      case "ms":
-        return n;
-      default:
-        return void 0;
-    }
-  }
-  function fmtShort(ms2) {
-    var msAbs = Math.abs(ms2);
-    if (msAbs >= d) {
-      return Math.round(ms2 / d) + "d";
-    }
-    if (msAbs >= h) {
-      return Math.round(ms2 / h) + "h";
-    }
-    if (msAbs >= m) {
-      return Math.round(ms2 / m) + "m";
-    }
-    if (msAbs >= s) {
-      return Math.round(ms2 / s) + "s";
-    }
-    return ms2 + "ms";
-  }
-  function fmtLong(ms2) {
-    var msAbs = Math.abs(ms2);
-    if (msAbs >= d) {
-      return plural(ms2, msAbs, d, "day");
-    }
-    if (msAbs >= h) {
-      return plural(ms2, msAbs, h, "hour");
-    }
-    if (msAbs >= m) {
-      return plural(ms2, msAbs, m, "minute");
-    }
-    if (msAbs >= s) {
-      return plural(ms2, msAbs, s, "second");
-    }
-    return ms2 + " ms";
-  }
-  function plural(ms2, msAbs, n, name) {
-    var isPlural = msAbs >= n * 1.5;
-    return Math.round(ms2 / n) + " " + name + (isPlural ? "s" : "");
-  }
-  return ms;
-}
-var common;
-var hasRequiredCommon;
-function requireCommon() {
-  if (hasRequiredCommon) return common;
-  hasRequiredCommon = 1;
-  function setup(env2) {
-    createDebug.debug = createDebug;
-    createDebug.default = createDebug;
-    createDebug.coerce = coerce2;
-    createDebug.disable = disable;
-    createDebug.enable = enable;
-    createDebug.enabled = enabled;
-    createDebug.humanize = requireMs();
-    createDebug.destroy = destroy;
-    Object.keys(env2).forEach((key) => {
-      createDebug[key] = env2[key];
-    });
-    createDebug.names = [];
-    createDebug.skips = [];
-    createDebug.formatters = {};
-    function selectColor(namespace) {
-      let hash = 0;
-      for (let i = 0; i < namespace.length; i++) {
-        hash = (hash << 5) - hash + namespace.charCodeAt(i);
-        hash |= 0;
-      }
-      return createDebug.colors[Math.abs(hash) % createDebug.colors.length];
-    }
-    createDebug.selectColor = selectColor;
-    function createDebug(namespace) {
-      let prevTime;
-      let enableOverride = null;
-      let namespacesCache;
-      let enabledCache;
-      function debug2(...args) {
-        if (!debug2.enabled) {
-          return;
-        }
-        const self = debug2;
-        const curr = Number(/* @__PURE__ */ new Date());
-        const ms2 = curr - (prevTime || curr);
-        self.diff = ms2;
-        self.prev = prevTime;
-        self.curr = curr;
-        prevTime = curr;
-        args[0] = createDebug.coerce(args[0]);
-        if (typeof args[0] !== "string") {
-          args.unshift("%O");
-        }
-        let index = 0;
-        args[0] = args[0].replace(/%([a-zA-Z%])/g, (match, format2) => {
-          if (match === "%%") {
-            return "%";
-          }
-          index++;
-          const formatter = createDebug.formatters[format2];
-          if (typeof formatter === "function") {
-            const val = args[index];
-            match = formatter.call(self, val);
-            args.splice(index, 1);
-            index--;
-          }
-          return match;
-        });
-        createDebug.formatArgs.call(self, args);
-        const logFn = self.log || createDebug.log;
-        logFn.apply(self, args);
-      }
-      debug2.namespace = namespace;
-      debug2.useColors = createDebug.useColors();
-      debug2.color = createDebug.selectColor(namespace);
-      debug2.extend = extend;
-      debug2.destroy = createDebug.destroy;
-      Object.defineProperty(debug2, "enabled", {
-        enumerable: true,
-        configurable: false,
-        get: () => {
-          if (enableOverride !== null) {
-            return enableOverride;
-          }
-          if (namespacesCache !== createDebug.namespaces) {
-            namespacesCache = createDebug.namespaces;
-            enabledCache = createDebug.enabled(namespace);
-          }
-          return enabledCache;
-        },
-        set: (v) => {
-          enableOverride = v;
-        }
-      });
-      if (typeof createDebug.init === "function") {
-        createDebug.init(debug2);
-      }
-      return debug2;
-    }
-    function extend(namespace, delimiter) {
-      const newDebug = createDebug(this.namespace + (typeof delimiter === "undefined" ? ":" : delimiter) + namespace);
-      newDebug.log = this.log;
-      return newDebug;
-    }
-    function enable(namespaces) {
-      createDebug.save(namespaces);
-      createDebug.namespaces = namespaces;
-      createDebug.names = [];
-      createDebug.skips = [];
-      const split = (typeof namespaces === "string" ? namespaces : "").trim().replace(" ", ",").split(",").filter(Boolean);
-      for (const ns of split) {
-        if (ns[0] === "-") {
-          createDebug.skips.push(ns.slice(1));
-        } else {
-          createDebug.names.push(ns);
-        }
-      }
-    }
-    function matchesTemplate(search, template) {
-      let searchIndex = 0;
-      let templateIndex = 0;
-      let starIndex = -1;
-      let matchIndex = 0;
-      while (searchIndex < search.length) {
-        if (templateIndex < template.length && (template[templateIndex] === search[searchIndex] || template[templateIndex] === "*")) {
-          if (template[templateIndex] === "*") {
-            starIndex = templateIndex;
-            matchIndex = searchIndex;
-            templateIndex++;
-          } else {
-            searchIndex++;
-            templateIndex++;
-          }
-        } else if (starIndex !== -1) {
-          templateIndex = starIndex + 1;
-          matchIndex++;
-          searchIndex = matchIndex;
-        } else {
-          return false;
-        }
-      }
-      while (templateIndex < template.length && template[templateIndex] === "*") {
-        templateIndex++;
-      }
-      return templateIndex === template.length;
-    }
-    function disable() {
-      const namespaces = [
-        ...createDebug.names,
-        ...createDebug.skips.map((namespace) => "-" + namespace)
-      ].join(",");
-      createDebug.enable("");
-      return namespaces;
-    }
-    function enabled(name) {
-      for (const skip of createDebug.skips) {
-        if (matchesTemplate(name, skip)) {
-          return false;
-        }
-      }
-      for (const ns of createDebug.names) {
-        if (matchesTemplate(name, ns)) {
-          return true;
-        }
-      }
-      return false;
-    }
-    function coerce2(val) {
-      if (val instanceof Error) {
-        return val.stack || val.message;
-      }
-      return val;
-    }
-    function destroy() {
-      console.warn("Instance method `debug.destroy()` is deprecated and no longer does anything. It will be removed in the next major version of `debug`.");
-    }
-    createDebug.enable(createDebug.load());
-    return createDebug;
-  }
-  common = setup;
-  return common;
-}
-var hasRequiredBrowser;
-function requireBrowser() {
-  if (hasRequiredBrowser) return browser.exports;
-  hasRequiredBrowser = 1;
-  (function(module, exports) {
-    exports.formatArgs = formatArgs;
-    exports.save = save;
-    exports.load = load;
-    exports.useColors = useColors;
-    exports.storage = localstorage();
-    exports.destroy = /* @__PURE__ */ (() => {
-      let warned = false;
-      return () => {
-        if (!warned) {
-          warned = true;
-          console.warn("Instance method `debug.destroy()` is deprecated and no longer does anything. It will be removed in the next major version of `debug`.");
-        }
-      };
-    })();
-    exports.colors = [
-      "#0000CC",
-      "#0000FF",
-      "#0033CC",
-      "#0033FF",
-      "#0066CC",
-      "#0066FF",
-      "#0099CC",
-      "#0099FF",
-      "#00CC00",
-      "#00CC33",
-      "#00CC66",
-      "#00CC99",
-      "#00CCCC",
-      "#00CCFF",
-      "#3300CC",
-      "#3300FF",
-      "#3333CC",
-      "#3333FF",
-      "#3366CC",
-      "#3366FF",
-      "#3399CC",
-      "#3399FF",
-      "#33CC00",
-      "#33CC33",
-      "#33CC66",
-      "#33CC99",
-      "#33CCCC",
-      "#33CCFF",
-      "#6600CC",
-      "#6600FF",
-      "#6633CC",
-      "#6633FF",
-      "#66CC00",
-      "#66CC33",
-      "#9900CC",
-      "#9900FF",
-      "#9933CC",
-      "#9933FF",
-      "#99CC00",
-      "#99CC33",
-      "#CC0000",
-      "#CC0033",
-      "#CC0066",
-      "#CC0099",
-      "#CC00CC",
-      "#CC00FF",
-      "#CC3300",
-      "#CC3333",
-      "#CC3366",
-      "#CC3399",
-      "#CC33CC",
-      "#CC33FF",
-      "#CC6600",
-      "#CC6633",
-      "#CC9900",
-      "#CC9933",
-      "#CCCC00",
-      "#CCCC33",
-      "#FF0000",
-      "#FF0033",
-      "#FF0066",
-      "#FF0099",
-      "#FF00CC",
-      "#FF00FF",
-      "#FF3300",
-      "#FF3333",
-      "#FF3366",
-      "#FF3399",
-      "#FF33CC",
-      "#FF33FF",
-      "#FF6600",
-      "#FF6633",
-      "#FF9900",
-      "#FF9933",
-      "#FFCC00",
-      "#FFCC33"
-    ];
-    function useColors() {
-      if (typeof window !== "undefined" && window.process && (window.process.type === "renderer" || window.process.__nwjs)) {
-        return true;
-      }
-      if (typeof navigator !== "undefined" && navigator.userAgent && navigator.userAgent.toLowerCase().match(/(edge|trident)\/(\d+)/)) {
-        return false;
-      }
-      let m;
-      return typeof document !== "undefined" && document.documentElement && document.documentElement.style && document.documentElement.style.WebkitAppearance || // Is firebug? http://stackoverflow.com/a/398120/376773
-      typeof window !== "undefined" && window.console && (window.console.firebug || window.console.exception && window.console.table) || // Is firefox >= v31?
-      // https://developer.mozilla.org/en-US/docs/Tools/Web_Console#Styling_messages
-      typeof navigator !== "undefined" && navigator.userAgent && (m = navigator.userAgent.toLowerCase().match(/firefox\/(\d+)/)) && parseInt(m[1], 10) >= 31 || // Double check webkit in userAgent just in case we are in a worker
-      typeof navigator !== "undefined" && navigator.userAgent && navigator.userAgent.toLowerCase().match(/applewebkit\/(\d+)/);
-    }
-    function formatArgs(args) {
-      args[0] = (this.useColors ? "%c" : "") + this.namespace + (this.useColors ? " %c" : " ") + args[0] + (this.useColors ? "%c " : " ") + "+" + module.exports.humanize(this.diff);
-      if (!this.useColors) {
-        return;
-      }
-      const c = "color: " + this.color;
-      args.splice(1, 0, c, "color: inherit");
-      let index = 0;
-      let lastC = 0;
-      args[0].replace(/%[a-zA-Z%]/g, (match) => {
-        if (match === "%%") {
-          return;
-        }
-        index++;
-        if (match === "%c") {
-          lastC = index;
-        }
-      });
-      args.splice(lastC, 0, c);
-    }
-    exports.log = console.debug || console.log || (() => {
-    });
-    function save(namespaces) {
-      try {
-        if (namespaces) {
-          exports.storage.setItem("debug", namespaces);
-        } else {
-          exports.storage.removeItem("debug");
-        }
-      } catch (error2) {
-      }
-    }
-    function load() {
-      let r;
-      try {
-        r = exports.storage.getItem("debug");
-      } catch (error2) {
-      }
-      if (!r && typeof process !== "undefined" && "env" in process) {
-        r = process.env.DEBUG;
-      }
-      return r;
-    }
-    function localstorage() {
-      try {
-        return localStorage;
-      } catch (error2) {
-      }
-    }
-    module.exports = requireCommon()(exports);
-    const { formatters } = module.exports;
-    formatters.j = function(v) {
-      try {
-        return JSON.stringify(v);
-      } catch (error2) {
-        return "[UnexpectedJSONParseError]: " + error2.message;
-      }
-    };
-  })(browser, browser.exports);
-  return browser.exports;
-}
-var node = { exports: {} };
-function hasFlag(flag, argv = globalThis.Deno ? globalThis.Deno.args : process$1.argv) {
-  const prefix = flag.startsWith("-") ? "" : flag.length === 1 ? "-" : "--";
-  const position = argv.indexOf(prefix + flag);
-  const terminatorPosition = argv.indexOf("--");
-  return position !== -1 && (terminatorPosition === -1 || position < terminatorPosition);
-}
-const { env: env$2 } = process$1;
-let flagForceColor;
-if (hasFlag("no-color") || hasFlag("no-colors") || hasFlag("color=false") || hasFlag("color=never")) {
-  flagForceColor = 0;
-} else if (hasFlag("color") || hasFlag("colors") || hasFlag("color=true") || hasFlag("color=always")) {
-  flagForceColor = 1;
-}
-function envForceColor() {
-  if ("FORCE_COLOR" in env$2) {
-    if (env$2.FORCE_COLOR === "true") {
-      return 1;
-    }
-    if (env$2.FORCE_COLOR === "false") {
-      return 0;
-    }
-    return env$2.FORCE_COLOR.length === 0 ? 1 : Math.min(Number.parseInt(env$2.FORCE_COLOR, 10), 3);
-  }
-}
-function translateLevel(level) {
-  if (level === 0) {
-    return false;
-  }
-  return {
-    level,
-    hasBasic: true,
-    has256: level >= 2,
-    has16m: level >= 3
-  };
-}
-function _supportsColor(haveStream, { streamIsTTY, sniffFlags = true } = {}) {
-  const noFlagForceColor = envForceColor();
-  if (noFlagForceColor !== void 0) {
-    flagForceColor = noFlagForceColor;
-  }
-  const forceColor = sniffFlags ? flagForceColor : noFlagForceColor;
-  if (forceColor === 0) {
-    return 0;
-  }
-  if (sniffFlags) {
-    if (hasFlag("color=16m") || hasFlag("color=full") || hasFlag("color=truecolor")) {
-      return 3;
-    }
-    if (hasFlag("color=256")) {
-      return 2;
-    }
-  }
-  if ("TF_BUILD" in env$2 && "AGENT_NAME" in env$2) {
-    return 1;
-  }
-  if (haveStream && !streamIsTTY && forceColor === void 0) {
-    return 0;
-  }
-  const min = forceColor || 0;
-  if (env$2.TERM === "dumb") {
-    return min;
-  }
-  if (process$1.platform === "win32") {
-    const osRelease = os.release().split(".");
-    if (Number(osRelease[0]) >= 10 && Number(osRelease[2]) >= 10586) {
-      return Number(osRelease[2]) >= 14931 ? 3 : 2;
-    }
-    return 1;
-  }
-  if ("CI" in env$2) {
-    if ("GITHUB_ACTIONS" in env$2 || "GITEA_ACTIONS" in env$2) {
-      return 3;
-    }
-    if (["TRAVIS", "CIRCLECI", "APPVEYOR", "GITLAB_CI", "BUILDKITE", "DRONE"].some((sign) => sign in env$2) || env$2.CI_NAME === "codeship") {
-      return 1;
-    }
-    return min;
-  }
-  if ("TEAMCITY_VERSION" in env$2) {
-    return /^(9\.(0*[1-9]\d*)\.|\d{2,}\.)/.test(env$2.TEAMCITY_VERSION) ? 1 : 0;
-  }
-  if (env$2.COLORTERM === "truecolor") {
-    return 3;
-  }
-  if (env$2.TERM === "xterm-kitty") {
-    return 3;
-  }
-  if ("TERM_PROGRAM" in env$2) {
-    const version = Number.parseInt((env$2.TERM_PROGRAM_VERSION || "").split(".")[0], 10);
-    switch (env$2.TERM_PROGRAM) {
-      case "iTerm.app": {
-        return version >= 3 ? 3 : 2;
-      }
-      case "Apple_Terminal": {
-        return 2;
-      }
-    }
-  }
-  if (/-256(color)?$/i.test(env$2.TERM)) {
-    return 2;
-  }
-  if (/^screen|^xterm|^vt100|^vt220|^rxvt|color|ansi|cygwin|linux/i.test(env$2.TERM)) {
-    return 1;
-  }
-  if ("COLORTERM" in env$2) {
-    return 1;
-  }
-  return min;
-}
-function createSupportsColor(stream, options = {}) {
-  const level = _supportsColor(stream, {
-    streamIsTTY: stream && stream.isTTY,
-    ...options
-  });
-  return translateLevel(level);
-}
-const supportsColor = {
-  stdout: createSupportsColor({ isTTY: tty.isatty(1) }),
-  stderr: createSupportsColor({ isTTY: tty.isatty(2) })
-};
-const supportsColor$1 = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.defineProperty({
-  __proto__: null,
-  createSupportsColor,
-  default: supportsColor
-}, Symbol.toStringTag, { value: "Module" }));
-const require$$2$1 = /* @__PURE__ */ getAugmentedNamespace(supportsColor$1);
-var hasRequiredNode;
-function requireNode() {
-  if (hasRequiredNode) return node.exports;
-  hasRequiredNode = 1;
-  (function(module, exports) {
-    const tty2 = require$$0$1;
-    const util2 = require$$1$1;
-    exports.init = init;
-    exports.log = log;
-    exports.formatArgs = formatArgs;
-    exports.save = save;
-    exports.load = load;
-    exports.useColors = useColors;
-    exports.destroy = util2.deprecate(
-      () => {
-      },
-      "Instance method `debug.destroy()` is deprecated and no longer does anything. It will be removed in the next major version of `debug`."
-    );
-    exports.colors = [6, 2, 3, 4, 5, 1];
-    try {
-      const supportsColor2 = require$$2$1;
-      if (supportsColor2 && (supportsColor2.stderr || supportsColor2).level >= 2) {
-        exports.colors = [
-          20,
-          21,
-          26,
-          27,
-          32,
-          33,
-          38,
-          39,
-          40,
-          41,
-          42,
-          43,
-          44,
-          45,
-          56,
-          57,
-          62,
-          63,
-          68,
-          69,
-          74,
-          75,
-          76,
-          77,
-          78,
-          79,
-          80,
-          81,
-          92,
-          93,
-          98,
-          99,
-          112,
-          113,
-          128,
-          129,
-          134,
-          135,
-          148,
-          149,
-          160,
-          161,
-          162,
-          163,
-          164,
-          165,
-          166,
-          167,
-          168,
-          169,
-          170,
-          171,
-          172,
-          173,
-          178,
-          179,
-          184,
-          185,
-          196,
-          197,
-          198,
-          199,
-          200,
-          201,
-          202,
-          203,
-          204,
-          205,
-          206,
-          207,
-          208,
-          209,
-          214,
-          215,
-          220,
-          221
-        ];
-      }
-    } catch (error2) {
-    }
-    exports.inspectOpts = Object.keys(process.env).filter((key) => {
-      return /^debug_/i.test(key);
-    }).reduce((obj, key) => {
-      const prop = key.substring(6).toLowerCase().replace(/_([a-z])/g, (_, k) => {
-        return k.toUpperCase();
-      });
-      let val = process.env[key];
-      if (/^(yes|on|true|enabled)$/i.test(val)) {
-        val = true;
-      } else if (/^(no|off|false|disabled)$/i.test(val)) {
-        val = false;
-      } else if (val === "null") {
-        val = null;
-      } else {
-        val = Number(val);
-      }
-      obj[prop] = val;
-      return obj;
-    }, {});
-    function useColors() {
-      return "colors" in exports.inspectOpts ? Boolean(exports.inspectOpts.colors) : tty2.isatty(process.stderr.fd);
-    }
-    function formatArgs(args) {
-      const { namespace: name, useColors: useColors2 } = this;
-      if (useColors2) {
-        const c = this.color;
-        const colorCode = "\x1B[3" + (c < 8 ? c : "8;5;" + c);
-        const prefix = `  ${colorCode};1m${name} \x1B[0m`;
-        args[0] = prefix + args[0].split("\n").join("\n" + prefix);
-        args.push(colorCode + "m+" + module.exports.humanize(this.diff) + "\x1B[0m");
-      } else {
-        args[0] = getDate() + name + " " + args[0];
-      }
-    }
-    function getDate() {
-      if (exports.inspectOpts.hideDate) {
-        return "";
-      }
-      return (/* @__PURE__ */ new Date()).toISOString() + " ";
-    }
-    function log(...args) {
-      return process.stderr.write(util2.formatWithOptions(exports.inspectOpts, ...args) + "\n");
-    }
-    function save(namespaces) {
-      if (namespaces) {
-        process.env.DEBUG = namespaces;
-      } else {
-        delete process.env.DEBUG;
-      }
-    }
-    function load() {
-      return process.env.DEBUG;
-    }
-    function init(debug2) {
-      debug2.inspectOpts = {};
-      const keys = Object.keys(exports.inspectOpts);
-      for (let i = 0; i < keys.length; i++) {
-        debug2.inspectOpts[keys[i]] = exports.inspectOpts[keys[i]];
-      }
-    }
-    module.exports = requireCommon()(exports);
-    const { formatters } = module.exports;
-    formatters.o = function(v) {
-      this.inspectOpts.colors = this.useColors;
-      return util2.inspect(v, this.inspectOpts).split("\n").map((str) => str.trim()).join(" ");
-    };
-    formatters.O = function(v) {
-      this.inspectOpts.colors = this.useColors;
-      return util2.inspect(v, this.inspectOpts);
-    };
-  })(node, node.exports);
-  return node.exports;
-}
-if (typeof process === "undefined" || process.type === "renderer" || process.browser === true || process.__nwjs) {
-  src$1.exports = requireBrowser();
-} else {
-  src$1.exports = requireNode();
-}
-var srcExports = src$1.exports;
-const { app: app$1, BrowserWindow } = electron;
-const isAccelerator = electronIsAccelerator;
-const equals = keyboardeventsAreequal;
-const { toKeyEvent } = keyboardeventFromElectronAccelerator;
-const _debug = srcExports;
-const debug$3 = _debug("electron-localshortcut");
-const ANY_WINDOW = {};
-const windowsWithShortcuts = /* @__PURE__ */ new WeakMap();
-const title$9 = (win2) => {
-  if (win2) {
-    try {
-      return win2.getTitle();
-    } catch (error2) {
-      return "A destroyed window";
-    }
-  }
-  return "An falsy value";
-};
-function _checkAccelerator(accelerator) {
-  if (!isAccelerator(accelerator)) {
-    const w = {};
-    Error.captureStackTrace(w);
-    const stack = w.stack ? w.stack.split("\n").slice(4).join("\n") : w.message;
-    const msg = `
-WARNING: ${accelerator} is not a valid accelerator.
-
-${stack}
-`;
-    console.error(msg);
-  }
-}
-function disableAll(win2) {
-  debug$3(`Disabling all shortcuts on window ${title$9(win2)}`);
-  const wc = win2.webContents;
-  const shortcutsOfWindow = windowsWithShortcuts.get(wc);
-  for (const shortcut of shortcutsOfWindow) {
-    shortcut.enabled = false;
-  }
-}
-function enableAll(win2) {
-  debug$3(`Enabling all shortcuts on window ${title$9(win2)}`);
-  const wc = win2.webContents;
-  const shortcutsOfWindow = windowsWithShortcuts.get(wc);
-  for (const shortcut of shortcutsOfWindow) {
-    shortcut.enabled = true;
-  }
-}
-function unregisterAll(win2) {
-  debug$3(`Unregistering all shortcuts on window ${title$9(win2)}`);
-  const wc = win2.webContents;
-  const shortcutsOfWindow = windowsWithShortcuts.get(wc);
-  if (shortcutsOfWindow && shortcutsOfWindow.removeListener) {
-    shortcutsOfWindow.removeListener();
-    windowsWithShortcuts.delete(wc);
-  }
-}
-function _normalizeEvent(input) {
-  const normalizedEvent = {
-    code: input.code,
-    key: input.key
-  };
-  ["alt", "shift", "meta"].forEach((prop) => {
-    if (typeof input[prop] !== "undefined") {
-      normalizedEvent[`${prop}Key`] = input[prop];
-    }
-  });
-  if (typeof input.control !== "undefined") {
-    normalizedEvent.ctrlKey = input.control;
-  }
-  return normalizedEvent;
-}
-function _findShortcut(event, shortcutsOfWindow) {
-  let i = 0;
-  for (const shortcut of shortcutsOfWindow) {
-    if (equals(shortcut.eventStamp, event)) {
-      return i;
-    }
-    i++;
-  }
-  return -1;
-}
-const _onBeforeInput = (shortcutsOfWindow) => (e, input) => {
-  if (input.type === "keyUp") {
-    return;
-  }
-  const event = _normalizeEvent(input);
-  debug$3(`before-input-event: ${input} is translated to: ${event}`);
-  for (const { eventStamp, callback } of shortcutsOfWindow) {
-    if (equals(eventStamp, event)) {
-      debug$3(`eventStamp: ${eventStamp} match`);
-      callback();
-      return;
-    }
-    debug$3(`eventStamp: ${eventStamp} no match`);
-  }
-};
-function register(win2, accelerator, callback) {
-  let wc;
-  if (typeof callback === "undefined") {
-    wc = ANY_WINDOW;
-    callback = accelerator;
-    accelerator = win2;
-  } else {
-    wc = win2.webContents;
-  }
-  if (Array.isArray(accelerator) === true) {
-    accelerator.forEach((accelerator2) => {
-      if (typeof accelerator2 === "string") {
-        register(win2, accelerator2, callback);
-      }
-    });
-    return;
-  }
-  debug$3(`Registering callback for ${accelerator} on window ${title$9(win2)}`);
-  _checkAccelerator(accelerator);
-  debug$3(`${accelerator} seems a valid shortcut sequence.`);
-  let shortcutsOfWindow;
-  if (windowsWithShortcuts.has(wc)) {
-    debug$3("Window has others shortcuts registered.");
-    shortcutsOfWindow = windowsWithShortcuts.get(wc);
-  } else {
-    debug$3("This is the first shortcut of the window.");
-    shortcutsOfWindow = [];
-    windowsWithShortcuts.set(wc, shortcutsOfWindow);
-    if (wc === ANY_WINDOW) {
-      const keyHandler = _onBeforeInput(shortcutsOfWindow);
-      const enableAppShortcuts = (e, win3) => {
-        const wc2 = win3.webContents;
-        wc2.on("before-input-event", keyHandler);
-        wc2.once(
-          "closed",
-          () => wc2.removeListener("before-input-event", keyHandler)
-        );
-      };
-      const windows2 = BrowserWindow.getAllWindows();
-      windows2.forEach((win3) => enableAppShortcuts(null, win3));
-      app$1.on("browser-window-created", enableAppShortcuts);
-      shortcutsOfWindow.removeListener = () => {
-        const windows3 = BrowserWindow.getAllWindows();
-        windows3.forEach(
-          (win3) => win3.webContents.removeListener("before-input-event", keyHandler)
-        );
-        app$1.removeListener("browser-window-created", enableAppShortcuts);
-      };
-    } else {
-      const keyHandler = _onBeforeInput(shortcutsOfWindow);
-      wc.on("before-input-event", keyHandler);
-      shortcutsOfWindow.removeListener = () => wc.removeListener("before-input-event", keyHandler);
-      wc.once("closed", shortcutsOfWindow.removeListener);
-    }
-  }
-  debug$3("Adding shortcut to window set.");
-  const eventStamp = toKeyEvent(accelerator);
-  shortcutsOfWindow.push({
-    eventStamp,
-    callback,
-    enabled: true
-  });
-  debug$3("Shortcut registered.");
-}
-function unregister(win2, accelerator) {
-  let wc;
-  if (typeof accelerator === "undefined") {
-    wc = ANY_WINDOW;
-    accelerator = win2;
-  } else {
-    if (win2.isDestroyed()) {
-      debug$3("Early return because window is destroyed.");
-      return;
-    }
-    wc = win2.webContents;
-  }
-  if (Array.isArray(accelerator) === true) {
-    accelerator.forEach((accelerator2) => {
-      if (typeof accelerator2 === "string") {
-        unregister(win2, accelerator2);
-      }
-    });
-    return;
-  }
-  debug$3(`Unregistering callback for ${accelerator} on window ${title$9(win2)}`);
-  _checkAccelerator(accelerator);
-  debug$3(`${accelerator} seems a valid shortcut sequence.`);
-  if (!windowsWithShortcuts.has(wc)) {
-    debug$3("Early return because window has never had shortcuts registered.");
-    return;
-  }
-  const shortcutsOfWindow = windowsWithShortcuts.get(wc);
-  const eventStamp = toKeyEvent(accelerator);
-  const shortcutIdx = _findShortcut(eventStamp, shortcutsOfWindow);
-  if (shortcutIdx === -1) {
-    return;
-  }
-  shortcutsOfWindow.splice(shortcutIdx, 1);
-  if (shortcutsOfWindow.length === 0) {
-    shortcutsOfWindow.removeListener();
-    windowsWithShortcuts.delete(wc);
-  }
-}
-function isRegistered(win2, accelerator) {
-  _checkAccelerator(accelerator);
-  const wc = win2.webContents;
-  const shortcutsOfWindow = windowsWithShortcuts.get(wc);
-  const eventStamp = toKeyEvent(accelerator);
-  return _findShortcut(eventStamp, shortcutsOfWindow) !== -1;
-}
-var electronLocalshortcut = {
-  register,
-  unregister,
-  isRegistered,
-  unregisterAll,
-  enableAll,
-  disableAll
-};
-const localShortcut = /* @__PURE__ */ getDefaultExportFromCjs(electronLocalshortcut);
-if (typeof electron === "string") {
-  throw new TypeError("Not running in an Electron environment!");
-}
-const { env: env$1 } = process;
-const isEnvSet = "ELECTRON_IS_DEV" in env$1;
-const getFromEnv = Number.parseInt(env$1.ELECTRON_IS_DEV, 10) === 1;
-const isDev = isEnvSet ? getFromEnv : !electron.app.isPackaged;
-const isMacOS = process$1.platform === "darwin";
-const developmentToolsOptions = /* @__PURE__ */ new Map();
-function toggleDevelopmentTools(win2 = BrowserWindow$1.getFocusedWindow()) {
-  if (win2) {
-    const { webContents } = win2;
-    if (webContents.isDevToolsOpened()) {
-      webContents.closeDevTools();
-    } else {
-      webContents.openDevTools(developmentToolsOptions.get(win2));
-    }
-  }
-}
-function shouldRun(options) {
-  return options && (options.isEnabled === true || options.isEnabled === null && isDev);
-}
-function getOptionsForWindow(win2, options) {
-  if (!options.windowSelector) {
-    return options;
-  }
-  const newOptions = options.windowSelector(win2);
-  return newOptions === true ? options : newOptions === false ? { isEnabled: false } : { ...options, ...newOptions };
-}
-async function registerAccelerators(win2 = BrowserWindow$1.getFocusedWindow()) {
-  await app$2.whenReady();
-  if (win2) {
-    localShortcut.register(win2, "CommandOrControl+Shift+C", inspectElements);
-    localShortcut.register(win2, isMacOS ? "Command+Alt+I" : "Control+Shift+I", devTools);
-    localShortcut.register(win2, "F12", devTools);
-    localShortcut.register(win2, "CommandOrControl+R", refresh);
-    localShortcut.register(win2, "F5", refresh);
-  } else {
-    localShortcut.register("CommandOrControl+Shift+C", inspectElements);
-    localShortcut.register(isMacOS ? "Command+Alt+I" : "Control+Shift+I", devTools);
-    localShortcut.register("F12", devTools);
-    localShortcut.register("CommandOrControl+R", refresh);
-    localShortcut.register("F5", refresh);
-  }
-}
-function devTools(win2 = BrowserWindow$1.getFocusedWindow()) {
-  if (win2) {
-    toggleDevelopmentTools(win2);
-  }
-}
-function openDevTools(win2 = BrowserWindow$1.getFocusedWindow()) {
-  if (win2) {
-    win2.webContents.openDevTools(developmentToolsOptions.get(win2));
-  }
-}
-function refresh(win2 = BrowserWindow$1.getFocusedWindow()) {
-  if (win2) {
-    win2.webContents.reloadIgnoringCache();
-  }
-}
-function inspectElements() {
-  const win2 = BrowserWindow$1.getFocusedWindow();
-  const inspect = () => {
-    win2.devToolsWebContents.executeJavaScript("DevToolsAPI.enterInspectElementMode()");
-  };
-  if (win2) {
-    if (win2.webContents.isDevToolsOpened()) {
-      inspect();
-    } else {
-      win2.webContents.once("devtools-opened", inspect);
-      win2.openDevTools();
-    }
-  }
-}
-function debug$2(options) {
-  options = {
-    isEnabled: null,
-    showDevTools: true,
-    devToolsMode: "previous",
-    ...options
-  };
-  if (!options.windowSelector) {
-    if (!shouldRun(options)) {
-      return;
-    }
-    registerAccelerators();
-  }
-  app$2.on("browser-window-created", (event, win2) => {
-    win2.webContents.once("dom-ready", () => {
-      const winOptions = getOptionsForWindow(win2, options);
-      if (winOptions.devToolsMode !== "previous") {
-        developmentToolsOptions.set(win2, {
-          ...developmentToolsOptions.get(win2),
-          mode: winOptions.devToolsMode
-        });
-      }
-      if (!shouldRun(winOptions)) {
-        return;
-      }
-      if (winOptions.windowSelector) {
-        registerAccelerators(win2);
-      }
-      if (winOptions.showDevTools) {
-        openDevTools(win2);
-      }
-    });
-  });
-}
-const isMac = process.platform === "darwin";
-function getMenu(app2, win2, store2) {
-  return [
-    ...isMac ? [{
-      label: app2.name,
-      submenu: [
-        { role: "about" },
-        { type: "separator" },
-        { role: "services" },
-        { type: "separator" },
-        { role: "hide" },
-        { role: "hideOthers" },
-        { role: "unhide" },
-        { type: "separator" },
-        { role: "quit" }
-      ]
-    }] : [],
-    {
-      label: "File",
-      submenu: [
-        {
-          label: "Open Folder",
-          click: async () => {
-            const result = await dialog.showOpenDialog(win2, {
-              properties: ["openDirectory"]
-            });
-            win2.webContents.send("open-folder-dialog-completed", result);
-          }
-        },
-        { type: "separator" },
-        {
-          label: "New",
-          submenu: [
-            {
-              label: "File",
-              click: async () => {
-                const result = await dialog.showSaveDialog(win2, {
-                  title: "Create New File",
-                  buttonLabel: "Create"
-                });
-                win2.webContents.send("new-file-dialog-completed", result);
-              }
-            },
-            {
-              label: "Folder",
-              click: async () => {
-                const result = await dialog.showSaveDialog(win2, {
-                  title: "Create New Folder",
-                  buttonLabel: "Create",
-                  properties: ["createDirectory"]
-                });
-                win2.webContents.send("new-folder-dialog-completed", result);
-              }
-            }
-          ]
-        },
-        { type: "separator" },
-        {
-          label: "Delete",
-          click: async () => {
-            const result = await dialog.showMessageBox(win2, {
-              type: "warning",
-              title: "Confirm Delete",
-              message: "Are you sure you want to delete the selected items?",
-              buttons: ["Delete", "Cancel"],
-              defaultId: 1,
-              cancelId: 1
-            });
-            win2.webContents.send("delete-confirmed", result);
-          }
-        },
-        {
-          label: "Clear Cache",
-          click: async () => {
-            store2.clear();
-          }
-        },
-        isMac ? { role: "close" } : { role: "quit" }
-      ]
-    },
-    {
-      label: "Edit",
-      submenu: [
-        { role: "undo" },
-        { role: "redo" },
-        { type: "separator" },
-        { role: "cut" },
-        { role: "copy" },
-        { role: "paste" },
-        ...isMac ? [
-          { role: "pasteAndMatchStyle" },
-          { role: "delete" },
-          { role: "selectAll" },
-          { type: "separator" },
-          {
-            label: "Speech",
-            submenu: [
-              { role: "startSpeaking" },
-              { role: "stopSpeaking" }
-            ]
-          }
-        ] : [
-          { role: "delete" },
-          { type: "separator" },
-          { role: "selectAll" }
-        ]
-      ]
-    },
-    {
-      label: "View",
-      submenu: [
-        { role: "reload" },
-        { role: "forceReload" },
-        { role: "toggleDevTools" },
-        { type: "separator" },
-        { role: "resetZoom" },
-        { role: "zoomIn" },
-        { role: "zoomOut" },
-        { type: "separator" },
-        { role: "togglefullscreen" }
-      ]
-    },
-    {
-      label: "Window",
-      submenu: [
-        { role: "minimize" },
-        { role: "zoom" },
-        ...isMac ? [
-          { type: "separator" },
-          { role: "front" },
-          { type: "separator" },
-          { role: "window" }
-        ] : [
-          { role: "close" }
-        ]
-      ]
-    },
-    {
-      role: "help",
-      submenu: [
-        {
-          label: "Learn More",
-          click: async () => {
-            await shell$1.openExternal("https://electronjs.org");
-          }
-        }
-      ]
-    }
-  ];
-}
+import os from "node:os";
+import { g as getDefaultExportFromCjs } from "./main-CRbHhtmw.js";
 const isObject = (value) => {
   const type2 = typeof value;
   return value !== null && (type2 === "object" || type2 === "function");
@@ -3105,8 +1459,8 @@ var scope = {};
     endIf() {
       return this._endBlockNode(If, Else);
     }
-    _for(node2, forBody) {
-      this._blockNode(node2);
+    _for(node, forBody) {
+      this._blockNode(node);
       if (forBody)
         this.code(forBody).endFor();
       return this;
@@ -3155,10 +1509,10 @@ var scope = {};
     }
     // `return` statement
     return(value) {
-      const node2 = new Return();
-      this._blockNode(node2);
+      const node = new Return();
+      this._blockNode(node);
       this.code(value);
-      if (node2.nodes.length !== 1)
+      if (node.nodes.length !== 1)
         throw new Error('CodeGen: "return" should have one node');
       return this._endBlockNode(Return);
     }
@@ -3166,16 +1520,16 @@ var scope = {};
     try(tryBody, catchCode, finallyCode) {
       if (!catchCode && !finallyCode)
         throw new Error('CodeGen: "try" without "catch" and "finally"');
-      const node2 = new Try();
-      this._blockNode(node2);
+      const node = new Try();
+      this._blockNode(node);
       this.code(tryBody);
       if (catchCode) {
         const error2 = this.name("e");
-        this._currNode = node2.catch = new Catch(error2);
+        this._currNode = node.catch = new Catch(error2);
         catchCode(error2);
       }
       if (finallyCode) {
-        this._currNode = node2.finally = new Finally();
+        this._currNode = node.finally = new Finally();
         this.code(finallyCode);
       }
       return this._endBlockNode(Catch, Finally);
@@ -3220,13 +1574,13 @@ var scope = {};
         this._root.optimizeNames(this._root.names, this._constants);
       }
     }
-    _leafNode(node2) {
-      this._currNode.nodes.push(node2);
+    _leafNode(node) {
+      this._currNode.nodes.push(node);
       return this;
     }
-    _blockNode(node2) {
-      this._currNode.nodes.push(node2);
-      this._nodes.push(node2);
+    _blockNode(node) {
+      this._currNode.nodes.push(node);
+      this._nodes.push(node);
     }
     _endBlockNode(N1, N2) {
       const n = this._currNode;
@@ -3236,12 +1590,12 @@ var scope = {};
       }
       throw new Error(`CodeGen: not in block "${N2 ? `${N1.kind}/${N2.kind}` : N1.kind}"`);
     }
-    _elseNode(node2) {
+    _elseNode(node) {
       const n = this._currNode;
       if (!(n instanceof If)) {
         throw new Error('CodeGen: "else" without "if"');
       }
-      this._currNode = n.else = node2;
+      this._currNode = n.else = node;
       return this;
     }
     get _root() {
@@ -3251,9 +1605,9 @@ var scope = {};
       const ns = this._nodes;
       return ns[ns.length - 1];
     }
-    set _currNode(node2) {
+    set _currNode(node) {
       const ns = this._nodes;
-      ns[ns.length - 1] = node2;
+      ns[ns.length - 1] = node;
     }
   }
   exports.CodeGen = CodeGen;
@@ -4653,9 +3007,9 @@ function commentKeyword({ gen, schemaEnv, schema, errSchemaPath, opts }) {
   }
 }
 function returnResults(it) {
-  const { gen, schemaEnv, validateName, ValidationError, opts } = it;
+  const { gen, schemaEnv, validateName, ValidationError: ValidationError2, opts } = it;
   if (schemaEnv.$async) {
-    gen.if((0, codegen_1$r._)`${names_1$6.default.errors} === 0`, () => gen.return(names_1$6.default.data), () => gen.throw((0, codegen_1$r._)`new ${ValidationError}(${names_1$6.default.vErrors})`));
+    gen.if((0, codegen_1$r._)`${names_1$6.default.errors} === 0`, () => gen.return(names_1$6.default.data), () => gen.throw((0, codegen_1$r._)`new ${ValidationError2}(${names_1$6.default.vErrors})`));
   } else {
     gen.assign((0, codegen_1$r._)`${validateName}.errors`, names_1$6.default.vErrors);
     if (opts.unevaluated)
@@ -4999,21 +3353,15 @@ function getData($data, { dataLevel, dataNames, dataPathArr }) {
 }
 validate.getData = getData;
 var validation_error = {};
-var hasRequiredValidation_error;
-function requireValidation_error() {
-  if (hasRequiredValidation_error) return validation_error;
-  hasRequiredValidation_error = 1;
-  Object.defineProperty(validation_error, "__esModule", { value: true });
-  class ValidationError extends Error {
-    constructor(errors2) {
-      super("validation failed");
-      this.errors = errors2;
-      this.ajv = this.validation = true;
-    }
+Object.defineProperty(validation_error, "__esModule", { value: true });
+class ValidationError extends Error {
+  constructor(errors2) {
+    super("validation failed");
+    this.errors = errors2;
+    this.ajv = this.validation = true;
   }
-  validation_error.default = ValidationError;
-  return validation_error;
 }
+validation_error.default = ValidationError;
 var ref_error = {};
 Object.defineProperty(ref_error, "__esModule", { value: true });
 const resolve_1$1 = resolve$2;
@@ -5029,7 +3377,7 @@ var compile = {};
 Object.defineProperty(compile, "__esModule", { value: true });
 compile.resolveSchema = compile.getCompilingSchema = compile.resolveRef = compile.compileSchema = compile.SchemaEnv = void 0;
 const codegen_1$q = codegen;
-const validation_error_1 = requireValidation_error();
+const validation_error_1 = validation_error;
 const names_1$5 = names$1;
 const resolve_1 = resolve$2;
 const util_1$o = util;
@@ -5943,7 +4291,7 @@ uri$1.default = uri;
   Object.defineProperty(exports, "CodeGen", { enumerable: true, get: function() {
     return codegen_12.CodeGen;
   } });
-  const validation_error_12 = requireValidation_error();
+  const validation_error_12 = validation_error;
   const ref_error_12 = ref_error;
   const rules_12 = rules;
   const compile_12 = compile;
@@ -8952,7 +7300,7 @@ jsonSchema202012.default = addMetaSchema2020;
   Object.defineProperty(exports, "CodeGen", { enumerable: true, get: function() {
     return codegen_12.CodeGen;
   } });
-  var validation_error_12 = requireValidation_error();
+  var validation_error_12 = validation_error;
   Object.defineProperty(exports, "ValidationError", { enumerable: true, get: function() {
     return validation_error_12.default;
   } });
@@ -9483,7 +7831,7 @@ const require$$3 = {
   Object.defineProperty(exports, "CodeGen", { enumerable: true, get: function() {
     return codegen_12.CodeGen;
   } });
-  var validation_error_12 = requireValidation_error();
+  var validation_error_12 = validation_error;
   Object.defineProperty(exports, "ValidationError", { enumerable: true, get: function() {
     return validation_error_12.default;
   } });
@@ -11461,18 +9809,18 @@ class Conf {
     const fileExtension = options.fileExtension ? `.${options.fileExtension}` : "";
     this.path = path.resolve(options.cwd, `${options.configName ?? "config"}${fileExtension}`);
     const fileStore = this.store;
-    const store2 = Object.assign(createPlainObject(), options.defaults, fileStore);
+    const store = Object.assign(createPlainObject(), options.defaults, fileStore);
     if (options.migrations) {
       if (!options.projectVersion) {
         throw new Error("Please specify the `projectVersion` option.");
       }
       this._migrate(options.migrations, options.projectVersion, options.beforeEachMigration);
     }
-    this._validate(store2);
+    this._validate(store);
     try {
-      assert.deepEqual(fileStore, store2);
+      assert.deepEqual(fileStore, store);
     } catch {
-      this.store = store2;
+      this.store = store;
     }
     if (options.watch) {
       this._watch();
@@ -11482,8 +9830,8 @@ class Conf {
     if (__privateGet(this, _options).accessPropertiesByDotNotation) {
       return this._get(key, defaultValue);
     }
-    const { store: store2 } = this;
-    return key in store2 ? store2[key] : defaultValue;
+    const { store } = this;
+    return key in store ? store[key] : defaultValue;
   }
   set(key, value) {
     if (typeof key !== "string" && typeof key !== "object") {
@@ -11495,13 +9843,13 @@ class Conf {
     if (this._containsReservedKey(key)) {
       throw new TypeError(`Please don't use the ${INTERNAL_KEY} key, as it's used to manage this module internal operations.`);
     }
-    const { store: store2 } = this;
+    const { store } = this;
     const set = (key2, value2) => {
       checkValueType(key2, value2);
       if (__privateGet(this, _options).accessPropertiesByDotNotation) {
-        setProperty(store2, key2, value2);
+        setProperty(store, key2, value2);
       } else {
-        store2[key2] = value2;
+        store[key2] = value2;
       }
     };
     if (typeof key === "object") {
@@ -11512,7 +9860,7 @@ class Conf {
     } else {
       set(key, value);
     }
-    this.store = store2;
+    this.store = store;
   }
   /**
       Check if an item exists.
@@ -11540,13 +9888,13 @@ class Conf {
     }
   }
   delete(key) {
-    const { store: store2 } = this;
+    const { store } = this;
     if (__privateGet(this, _options).accessPropertiesByDotNotation) {
-      deleteProperty(store2, key);
+      deleteProperty(store, key);
     } else {
-      delete store2[key];
+      delete store[key];
     }
-    this.store = store2;
+    this.store = store;
   }
   /**
       Delete all items.
@@ -11769,9 +10117,9 @@ class Conf {
     return getProperty(this.store, key, defaultValue);
   }
   _set(key, value) {
-    const { store: store2 } = this;
-    setProperty(store2, key, value);
-    this.store = store2;
+    const { store } = this;
+    setProperty(store, key, value);
+    this.store = store;
   }
 }
 _validator = new WeakMap();
@@ -11834,88 +10182,6 @@ class ElectronStore extends Conf {
     }
   }
 }
-createRequire(import.meta.url);
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const store = new ElectronStore();
-if (process.env.NODE_ENV === "development") {
-  debug$2();
-}
-process.env.APP_ROOT = path.join(__dirname, "..");
-const VITE_DEV_SERVER_URL = process.env["VITE_DEV_SERVER_URL"];
-const MAIN_DIST = path.join(process.env.APP_ROOT, "dist-electron");
-const RENDERER_DIST = path.join(process.env.APP_ROOT, "dist");
-process.env.VITE_PUBLIC = VITE_DEV_SERVER_URL ? path.join(process.env.APP_ROOT, "public") : RENDERER_DIST;
-let win;
-function createWindow() {
-  win = new BrowserWindow$1({
-    icon: path.join(process.env.VITE_PUBLIC, "electron-vite.svg"),
-    webPreferences: {
-      preload: path.join(__dirname, "preload.mjs")
-    }
-  });
-  const MenuTemplate = getMenu(app$2, win, store);
-  const menu = Menu.buildFromTemplate(MenuTemplate);
-  Menu.setApplicationMenu(menu);
-  win.webContents.on("did-finish-load", () => {
-    win == null ? void 0 : win.webContents.send("main-process-message", (/* @__PURE__ */ new Date()).toLocaleString());
-  });
-  if (VITE_DEV_SERVER_URL) {
-    win.loadURL(VITE_DEV_SERVER_URL);
-  } else {
-    win.loadFile(path.join(RENDERER_DIST, "index.html"));
-  }
-}
-app$2.on("window-all-closed", () => {
-  if (process.platform !== "darwin") {
-    app$2.quit();
-    win = null;
-  }
-});
-app$2.on("activate", () => {
-  if (BrowserWindow$1.getAllWindows().length === 0) {
-    createWindow();
-  }
-});
-app$2.on("ready", () => {
-  createWindow();
-  const MenuTemplate = getMenu(app$2, win, store);
-  const menu = Menu.buildFromTemplate(MenuTemplate);
-  Menu.setApplicationMenu(menu);
-  ipcMain$1.handle("readFile", async (_, filePath) => await fileApi.readFile(filePath));
-  ipcMain$1.handle("writeFile", async (_, filePath, content2) => await fileApi.writeFile(filePath, content2));
-  ipcMain$1.handle("readDir", async (_, dirPath) => await fileApi.readDir(dirPath));
-  ipcMain$1.handle("stat", async (_, itemPath) => await fileApi.stat(itemPath));
-  ipcMain$1.handle("exists", async (_, itemPath) => await fileApi.exists(itemPath));
-  ipcMain$1.handle("mkdir", async (_, dirPath) => await fileApi.mkdir(dirPath));
-  ipcMain$1.handle("delete", async (_, itemPath) => await fileApi.delete(itemPath));
-  ipcMain$1.handle("rename", async (_, oldPath, newPath) => await fileApi.rename(oldPath, newPath));
-  ipcMain$1.handle("copy", async (_, src2, dest) => await fileApi.copy(src2, dest));
-  ipcMain$1.handle("pathjoin", async (_, ...paths) => await path.join(...paths));
-  ipcMain$1.handle("pathdirname", async (_, filePath) => await path.dirname(filePath));
-  ipcMain$1.handle("pathbasename", async (_, filePath) => await path.basename(filePath));
-  ipcMain$1.handle("pathnormalize", async (_, filePath) => await path.normalize(filePath));
-  ipcMain$1.handle("setStore", async (_, key, value) => await store.set(key, value));
-  ipcMain$1.handle("getStore", async (_, key) => await store.get(key));
-  ipcMain$1.handle("deleteStore", async (_, key) => await store.delete(key));
-  ipcMain$1.handle("clearStore", async () => await store.clear());
-  ipcMain$1.handle("storeHas", async (_, key) => await store.has(key));
-  ipcMain$1.handle("mainsend", async (_, channel, ...args) => await (win == null ? void 0 : win.webContents.send(channel, ...args)));
-  ipcMain$1.on("show-context-menu", () => {
-    const menu2 = Menu.buildFromTemplate(MenuTemplate);
-    menu2.popup({ window: win });
-  });
-  ipcMain$1.handle("showOpenDialog", async (_, options) => {
-    return await dialog.showOpenDialog(win, options);
-  });
-  ipcMain$1.handle("showSaveDialog", async (_, options) => {
-    return await dialog.showSaveDialog(win, options);
-  });
-  ipcMain$1.handle("showMessageBox", async (_, options) => {
-    return await dialog.showMessageBox(win, options);
-  });
-});
 export {
-  MAIN_DIST,
-  RENDERER_DIST,
-  VITE_DEV_SERVER_URL
+  ElectronStore as default
 };

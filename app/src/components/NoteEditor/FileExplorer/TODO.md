@@ -1,7 +1,6 @@
-- [x] fix NewFolder/NewFile \ 
-- [ ] open the same folder every time starting\
-- [ ] rename (editable except root) \
-- [ ] copy&paste (multiselection supported) \
+- [x] fix NewFolder/NewFile 
+- [ ] open the same folder every time starting
+- [ ] rename (editable except root) 
+- [ ] copy&paste (multiselection supported) 
 - [ ] fix select all
 - [ ] add obsidian features like internal links
-- [ ] obsidian-like css snippets feature

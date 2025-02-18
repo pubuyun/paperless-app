@@ -3,4 +3,8 @@ body {
     margin: 0;
     padding: 0;
     background-color: var(--color-secondary);
+    scrollbar-width: none;
+}
+html{
+    scrollbar-width: none;
 }

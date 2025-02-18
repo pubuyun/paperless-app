@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 import debug from 'electron-debug'
 import getMenu from './MenuTemplate'
-import Store from 'electron-store'
+import Store from 'electron-store';
 
 /* eslint-disable */
 const require = createRequire(import.meta.url)
@@ -13,6 +13,7 @@ const require = createRequire(import.meta.url)
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 const store = new Store()
+
 // The built directory structure
 //
 // ├─┬─┬ dist
@@ -23,7 +24,7 @@ const store = new Store()
 // │ │ └── preload.mjs
 // │
 
-// if development, enable debug
+// if development, enable debug and React DevTools
 if (process.env.NODE_ENV === 'development') {
   debug()
 }
@@ -47,7 +48,7 @@ function createWindow() {
   })
 
   // Create menu after window is initialized
-  const MenuTemplate = getMenu(app, win)
+  const MenuTemplate = getMenu(app, win, store)
   const menu = Menu.buildFromTemplate(MenuTemplate)
   Menu.setApplicationMenu(menu)
 
@@ -87,7 +88,7 @@ app.on('ready', () => {
   createWindow()
 
   // Recreate menu after window is ready
-  const MenuTemplate = getMenu(app, win)
+  const MenuTemplate = getMenu(app, win, store)
   const menu = Menu.buildFromTemplate(MenuTemplate)
   Menu.setApplicationMenu(menu)
   

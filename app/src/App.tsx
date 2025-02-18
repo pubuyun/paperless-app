@@ -13,29 +13,17 @@ const App: React.FC = () => {
   useEffect(() => {
     loadConfigs().then(setConfigs);
   }, []);
-  const [ActivePanel, setActivePanel] = useState<ComponentType>(() => () => <div>Loading panel...</div>);
-  const [ActiveContext, setActiveContext] = useState<ComponentType>(() => () => <div>Loading context...</div>);
+  const [ActivePage, setActivePage] = useState<ComponentType>(() => () => <div>Loading page...</div>);
   useEffect(() => {setActiveView("NoteEditor");}, []);
   useEffect(() => {
     const activeConfig = configs.find(config => config.id === activeView);
-    
     if (activeConfig) {
-      // Load panel component
-      const PanelComponent = lazy(() => {
+      const Component = lazy(() => {
         // @vite-ignore
-        return import(`./components/${activeConfig.id}/${activeConfig.panelComponent}.tsx`)
+        return import(`./components/${activeConfig.id}/${activeConfig.Component}.tsx`)
           .then(module => ({ default: module.default || module }));
       });
-      
-      // Load context component
-      const ContextComponent = lazy(() => {
-        // @vite-ignore
-        return import(`./components/${activeConfig.id}/${activeConfig.contextComponent}.tsx`)
-          .then(module => ({ default: module.default || module }));
-      });
-
-      setActivePanel(() => PanelComponent);
-      setActiveContext(() => ContextComponent);
+      setActivePage(() => Component);
     }
   }, [activeView, configs]);
   // const toggleDarkmode = () => {
@@ -43,7 +31,6 @@ const App: React.FC = () => {
   //   setMode(newMode);
   //   document.documentElement.setAttribute('data-theme', newMode);
   // };
-
   return (
     <Box className="app-container">
       <Sidebar
@@ -51,9 +38,8 @@ const App: React.FC = () => {
         activeView={activeView}
         onViewChange={setActiveView}
       />
-      <Suspense fallback={<div>Loading panel...</div>}>
-        <ActivePanel />
-        <ActiveContext />
+      <Suspense fallback={<div>Loading page...</div>}>
+        <ActivePage />
       </Suspense>
     </Box>
   );

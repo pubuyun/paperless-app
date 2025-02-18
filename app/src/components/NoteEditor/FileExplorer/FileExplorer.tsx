@@ -20,7 +20,6 @@ import { TreeItem2Icon } from '@mui/x-tree-view/TreeItem2Icon';
 import { TreeItem2Provider } from '@mui/x-tree-view/TreeItem2Provider';
 import { TreeItem2DragAndDropOverlay } from '@mui/x-tree-view/TreeItem2DragAndDropOverlay';
 import { SvgIconComponent } from '@mui/icons-material';
-
 // icons ---------------- 
 import ArticleIcon from '@mui/icons-material/Article';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -59,6 +58,10 @@ interface MultiSelectFileExplorerProps {
   defaultExpandedItems?: string[];
   onSelectionChange?: (selectedItems: string[]) => void;
   onItemsChange?: (items: FileItem[]) => void;
+  onDoubleClick?: (clickedItems: string[]) => void;
+  onExpandedItemsChange?: (event: React.SyntheticEvent<Element, Event>, itemIds: string[]) => void;
+  items: FileItem[];
+  setItems: React.Dispatch<React.SetStateAction<FileItem[]>>;
 }
 
 // ------------- components ----------------
@@ -280,9 +283,12 @@ export default function MultiSelectFileExplorer({
     defaultExpandedItems = ['1', '1.1'],
     onSelectionChange,
     onItemsChange,
+    onDoubleClick,
+    onExpandedItemsChange,
+    items,
+    setItems,
   }: MultiSelectFileExplorerProps) {
   const [selectedItems, setSelectedItems] = React.useState<string[]>([]);
-  const [items, setItems] = React.useState<FileItem[]>([]);
 
   const handleContextMenu = async (event: React.MouseEvent) => {
     event.preventDefault();
@@ -404,8 +410,6 @@ export default function MultiSelectFileExplorer({
   }, [onItemsChange]);
 
   const handleDeleteOperation = React.useCallback(async (result: { response: number }) => {
-    console.log("Delete operation triggered with result:", result);
-    console.log("Selected items:", selectedItems);
     if (result.response === 0 && selectedItems.length > 0) {
       await Promise.all(selectedItems.map(itemId => deleteItem(itemId)));
       setItems(prevItems => {
@@ -429,7 +433,6 @@ export default function MultiSelectFileExplorer({
         const newItems = deleteItemsRecursively(prevItems, selectedItems);
         setItems(newItems);
         onItemsChange?.(newItems);
-        console.log("Items deleted successfully", newItems);
         return newItems;
       });
       setSelectedItems([]);
@@ -442,28 +445,23 @@ export default function MultiSelectFileExplorer({
       subscription.current.forEach(({ channel, listener }) => {
         window.IpcApi.off(channel, listener);
       });
-      console.log("Unsubscribed from IPC events");
     }
     subscription.current = [];
     const handlers = {
       folderOpen: (...args: unknown[]) => {
         const dialogResult = args[0] as { canceled: boolean; filePaths: string[] };
-        console.log("Folder open dialog completed", dialogResult);
         void handleOpenFolder(dialogResult);
       },
       newFile: (...args: unknown[]) => {
         const dialogResult = args[0] as { canceled: boolean; filePath?: string };
-        console.log("New file dialog completed", dialogResult);
         void handleNewFile(dialogResult);
       },
       newFolder: (...args: unknown[]) => {
         const dialogResult = args[0] as { canceled: boolean; filePath?: string };
-        console.log("New folder dialog completed", dialogResult);
         void handleNewFolder(dialogResult);
       },
       delete: (...args: unknown[]) => {
         const result = args[0] as { response: number };
-        console.log("Delete confirmed", result);
         void handleDeleteOperation(result);
       }
     };
@@ -471,7 +469,6 @@ export default function MultiSelectFileExplorer({
     subscription.current.push( { channel: 'new-file-dialog-completed', listener: window.IpcApi.on('new-file-dialog-completed', handlers.newFile) });
     subscription.current.push( { channel: 'new-folder-dialog-completed', listener: window.IpcApi.on('new-folder-dialog-completed', handlers.newFolder) });
     subscription.current.push( { channel: 'delete-confirmed', listener: window.IpcApi.on('delete-confirmed', handlers.delete) });
-    console.log("Subscribed to IPC events", subscription.current);
     return () => {
       subscription.current.forEach(({ channel, listener }) => {
         window.IpcApi.off(channel, listener);
@@ -480,21 +477,22 @@ export default function MultiSelectFileExplorer({
   }, [handleDeleteOperation, handleNewFile, handleNewFolder, handleOpenFolder]);
 
   const handleSelectionChange = (event: React.SyntheticEvent, itemIds: string[]) => {
-    console.log("selection changed, original", selectedItems, "new", itemIds);
     setSelectedItems(itemIds);
     onSelectionChange?.(itemIds);
   };
 // ------------- end logic ----------------
   return (
-    <Box onContextMenu={handleContextMenu}>
+    <Box onContextMenu={handleContextMenu} className="file-explorer" sx={{ maxHeight: 'calc(100vh - 64px)', overflowY: 'scroll', scrollbarWidth: 'none' }}>
       <RichTreeView
         items={items}
-        defaultExpandedItems={defaultExpandedItems}
+        expandedItems={defaultExpandedItems}
         multiSelect
         isItemEditable={(item)=>item!=items[0]}
-        experimentalFeatures={{ labelEditing: true }}
+        experimentalFeatures={{ labelEditing: true,  }}
         selectedItems={selectedItems}
+        onDoubleClick={onDoubleClick ? () => onDoubleClick([selectedItems[0]]) : undefined}
         onSelectedItemsChange={handleSelectionChange}
+        onExpandedItemsChange={onExpandedItemsChange}
         sx={{ 
           height: 'fit-content', 
           flexGrow: 1, 

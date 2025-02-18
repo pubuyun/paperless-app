@@ -3,8 +3,7 @@ import { ComponentConfig } from '../../types/config';
 const config: ComponentConfig = {
   id: 'NoteEditor',
   name: 'Note Editor',
-  panelComponent: 'Panel',
-  contextComponent: 'Context',
+  Component: 'main',
   button: {
     icon: 'FolderOutlined',
     label: 'Explorer',
