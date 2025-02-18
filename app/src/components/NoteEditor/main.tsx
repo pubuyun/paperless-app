@@ -9,18 +9,11 @@ import DeleteIcon from '@mui/icons-material/Delete';
 
 import MultiSelectFileExplorer from './FileExplorer/FileExplorer';
 import { Button } from '@mui/material';
-import { FileItem } from "./FileExplorer/loadFiles";
+import {  } from "./FileExplorer/loadFiles";
 
 import { writeFileContent } from "./FileExplorer/loadFiles";
+import { EditorType, TabData, FileItem } from "./types";
 
-export interface TabData {
-  id: string;
-  label: string;
-  value: string;
-  saved: boolean;
-  content: string;
-  filePath?: string; // Store the actual file path for saving
-}
 
 export default function EditorWithExplorer() {
   const [tabs, setTabs] = React.useState<TabData[]>([]);
@@ -78,8 +71,19 @@ export default function EditorWithExplorer() {
     };
 
     const selectedItem = findItem(items, filePath);
-    if (!selectedItem || (selectedItem.fileType != 'markdown' && selectedItem.fileType != 'doc') ) return;
-
+    if (!selectedItem) return;
+    const editorType = (() => {
+      switch (selectedItem.fileType) {
+        case 'markdown':
+          return EditorType.Markdown;
+        case 'image':
+          return EditorType.Picture;
+        case 'pdf':
+          return EditorType.Pdf;
+        default:
+          return EditorType.Unsupported;
+        }
+    })();
     // Check if file is already open in a tab
     const existingTab = tabs.find(tab => tab.filePath === filePath);
     if (existingTab) return;
@@ -93,6 +97,7 @@ export default function EditorWithExplorer() {
             label: selectedItem.label,
             value: `${tabs.length + 1}`,
             saved: true,
+            editorType: editorType,
             content: content,
             filePath: filePath
         };

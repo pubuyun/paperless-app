@@ -3,7 +3,6 @@ import { useEffect, useRef } from "react";
 import { Box } from "@mui/material";
 import TabContext from "@mui/lab/TabContext";
 import TabList from "@mui/lab/TabList";
-import TabPanel from "@mui/lab/TabPanel";
 import { DragDropContext, Droppable, DropResult, DroppableProvided } from "@hello-pangea/dnd";
 import DraggableTab from "./DraggableTab";
 import Tab from "@mui/material/Tab";
@@ -13,7 +12,8 @@ import CancelIcon from '@mui/icons-material/Cancel';
 import { Crepe } from '@milkdown/crepe';
 import "@milkdown/crepe/theme/common/style.css";
 import "@milkdown/crepe/theme/frame.css";
-import { TabData } from "./main";
+import { replaceAll } from "@milkdown/kit/utils";
+import { TabData, EditorType } from "./types";
 import './Content.css';
 
 interface DraggableTabsListProps {
@@ -22,77 +22,66 @@ interface DraggableTabsListProps {
   activeValue: string;
   setActiveValue: React.Dispatch<React.SetStateAction<string>>;
 }
+
 export default function DraggableTabsList(props: DraggableTabsListProps) {
   const { tabs, setTabs } = props;
   const { activeValue, setActiveValue } = props;
-  const editorsRef = useRef<Map<string, Crepe>>(new Map());
-  
-  useEffect(() => {
-    // Initialize or switch editor when active tab changes
-    // Function to initialize editor for a specific tab
-    const initEditorForTab = async (tabValue: string) => {
-      // Destroy existing editor for this tab if it exists
-      const existingEditor = editorsRef.current.get(tabValue);
-      if (existingEditor) {
-        await existingEditor.destroy();
-        editorsRef.current.delete(tabValue);
-      }
+  const editorRef = useRef<Crepe | null>(null);
+  const activeTab = tabs.find(t => t.value === activeValue);
 
-      const tab = tabs.find(t => t.value === tabValue);
-      const editorRoot = document.querySelector(`#editor-${tabValue}`);
-      if (!tab || !editorRoot) return;
+  // Create editor once when component mounts
+  useEffect(() => {
+    const createEditor = async () => {
+      if(editorRef.current) return;
+      const editorRoot = document.querySelector('#markdown-editor');
+      if (!editorRoot) return;
 
       const editor = new Crepe({
         root: editorRoot,
-        defaultValue: tab.content || '# Untitled',
+        defaultValue: '',
       });
+
       editor.on(listener => {
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        listener.markdownUpdated((ctx, markdown, prevMarkdown) => {
-            tab.content = markdown;
-            tab.saved = false;
-            setTabs((tabs) => {
-              const newTabs = tabs.map((t) => (t.value === tabValue ? tab : t));
-              return newTabs;
-            });
+        listener.markdownUpdated((ctx, markdown) => {
+          const currentTab = tabs.find(t => t.value === activeValue);
+          if (currentTab) {
+            currentTab.content = markdown;
+            currentTab.saved = false;
+            setTabs(prevTabs => prevTabs.map(t => 
+              t.value === activeValue ? {...t, content: markdown, saved: false} : t
+            ));
           }
-        )
-      })
-      await editor.create();
-      // add custom settings here
-      editorsRef.current.set(tabValue, editor);
-    };
-    const timer = setTimeout(() => {
-      initEditorForTab(activeValue);
-    }, 0);
-
-    return () => {
-      clearTimeout(timer);
-    };
-}, [activeValue]); // Remove tabs dependency
-
-  // Cleanup editors when component unmounts
-  useEffect(() => {
-    return () => {
-      editorsRef.current.forEach(async (editor) => {
-        await editor.destroy();
+        });
       });
-      editorsRef.current.clear();
+
+      await editor.create();
+      editorRef.current = editor;
     };
-  }, []);
+
+    createEditor();
+
+    return () => {
+      if (editorRef.current) {
+        editorRef.current.destroy();
+        editorRef.current = null;
+      }
+    };
+  }, []); // Only run on mount
+
+  // Update editor content when active tab changes
+  useEffect(() => {
+    if (!activeTab || !editorRef.current) return;
+    
+    if (activeTab.editorType === EditorType.Markdown) {
+      editorRef.current.editor.action(replaceAll(activeTab.content || '# Untitled'));
+    }
+  }, [activeValue, activeTab]);
 
   const handleChange = (event: React.SyntheticEvent, newValue: string) => {
     setActiveValue(newValue);
   };
 
   const handleTabClose = async (tabValue: string) => {
-    // Destroy editor for the closed tab
-    const editor = editorsRef.current.get(tabValue);
-    if (editor) {
-      await editor.destroy();
-      editorsRef.current.delete(tabValue);
-    }
-
     const newTabs = tabs.filter((tab) => tab.value !== tabValue);
     setTabs(newTabs);
     if (activeValue === tabValue && newTabs.length > 0) {
@@ -182,15 +171,15 @@ export default function DraggableTabsList(props: DraggableTabsListProps) {
         <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
           <Stack direction="column">{_renderTabListWrappedInDroppable()}</Stack>
         </Box>
-        {tabs.map((tab, index) => (
-          <TabPanel value={tab.value} key={index} sx={{ padding: '2px' }}>
-            <div 
-              id={`editor-${tab.value}`}
-              className="outerEditor"
-              style={{ display: tab.value === activeValue ? 'block' : 'none' }}
-            />
-          </TabPanel>
-        ))}
+        <Box sx={{ padding: '2px' }}>
+          <div 
+            id="markdown-editor"
+            className="outerEditor"
+            style={{ 
+              display: activeTab?.editorType === EditorType.Markdown ? 'block' : 'none' 
+            }}
+          />
+        </Box>
       </TabContext>
     </Box>
   );
