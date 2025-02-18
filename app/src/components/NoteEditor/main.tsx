@@ -25,7 +25,7 @@ export interface TabData {
 export default function EditorWithExplorer() {
   const [tabs, setTabs] = React.useState<TabData[]>([]);
   const [items, setItems] = React.useState<FileItem[]>([]);
-  const [activeValue, setActiveValue] = React.useState<string>('1');
+  const [activeValue, setActiveValue] = React.useState<string>('0');
   const [expandedItems, setExpandedItems] = React.useState<string[]>([]);
   const [isLoaded, setIsLoaded] = React.useState(false);
 
@@ -43,6 +43,8 @@ export default function EditorWithExplorer() {
       if(await window.storeApi.has('tabs')){
         const tabs = await window.storeApi.get('tabs') as TabData[];
         setTabs(tabs);
+        if (tabs.length > 0) 
+          setActiveValue(tabs[0].value);
       }
       setIsLoaded(true);
     };
@@ -100,27 +102,34 @@ export default function EditorWithExplorer() {
         console.error('Error opening file:', error);
     }
   };
+
+  const saveTab = (tabValue:string) => {
+    const activeTab = tabs.find(tab => tab.value === tabValue);
+    if (!activeTab || activeTab.saved) return;
+    const { content, filePath } = activeTab;
+    if (!filePath) return;
+    writeFileContent(filePath, content);
+    setTabs(prevTabs =>
+      prevTabs.map(tab =>
+        tab.value === activeValue ? { ...tab, saved: true } : tab
+      )
+    );
+  }
   // handle save file
   React.useEffect(() => {
     const handleKeyDown = (event:KeyboardEvent) => {
       // detect Ctrl + S（Windows/Linux）or ⌘ + S（Mac）
       if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "s") {
-        console.log("saved file");
         event.preventDefault(); 
-        const activeTab = tabs.find(tab => tab.value === activeValue);
-        if (!activeTab || activeTab.saved) return;
-        const { content, filePath } = activeTab;
-        if (!filePath) return;
-        writeFileContent(filePath, content);
-        activeTab.saved = true;
+        saveTab(activeValue);
       }
     };
-
+    window.removeEventListener("keydown", handleKeyDown);
     window.addEventListener("keydown", handleKeyDown);
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, []);
+  }, [tabs, activeValue]);
   const handleExpandedItemsChange = (event:unknown, newExpandedItems: string[]) => {
     setExpandedItems(newExpandedItems);
   }

@@ -51,7 +51,10 @@ export default function DraggableTabsList(props: DraggableTabsListProps) {
         listener.markdownUpdated((ctx, markdown, prevMarkdown) => {
             tab.content = markdown;
             tab.saved = false;
-            console.log("set tab content", tab.saved);  
+            setTabs((tabs) => {
+              const newTabs = tabs.map((t) => (t.value === tabValue ? tab : t));
+              return newTabs;
+            });
           }
         )
       })
