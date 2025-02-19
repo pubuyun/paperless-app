@@ -73,7 +73,7 @@ export default function DraggableTabsList(props: DraggableTabsListProps) {
     if (!activeTab || !editorRef.current) return;
     
     if (activeTab.editorType === EditorType.Markdown) {
-      editorRef.current.editor.action(replaceAll(activeTab.content || '# Untitled'));
+      editorRef.current.editor.action(replaceAll(activeTab.content));
     }
   }, [activeValue, activeTab]);
 
