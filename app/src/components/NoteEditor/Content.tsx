@@ -26,13 +26,13 @@ interface DraggableTabsListProps {
 export default function DraggableTabsList(props: DraggableTabsListProps) {
   const { tabs, setTabs } = props;
   const { activeValue, setActiveValue } = props;
-  const [editorState, setEditorState ] = React.useState<Crepe | null>(null);
+  const editorRef = React.useRef<Crepe | null>(null);
   const activeTab = tabs.find(t => t.value === activeValue);
 
   // Create editor once when component mounts
   useEffect(() => {
     const createEditor = async () => {
-      if(editorState) return;
+      if(editorRef.current) return;
       const editorRoot = document.querySelector('#markdown-editor');
       if (!editorRoot) return;
 
@@ -55,27 +55,33 @@ export default function DraggableTabsList(props: DraggableTabsListProps) {
       });
 
       await editor.create();
-      setEditorState(editor);
+      editorRef.current = editor;
+      if (!activeTab || !editorRef.current) return;
+    
+      if (activeTab.editorType === EditorType.Markdown) {
+        editorRef.current.editor.action(replaceAll(activeTab.content));
+      }
     };
 
     createEditor();
 
     return () => {
-      if (editorState) {
-        editorState.destroy();
-        setEditorState(null);
+      if (editorRef.current) {
+        editorRef.current.destroy();
+        editorRef.current = null;
       }
     };
   }, []); // Only run on mount
 
   // Update editor content when active tab changes
   useEffect(() => {
-    if (!activeTab || !editorState) return;
+    if (!activeTab || !editorRef.current) return;
     
     if (activeTab.editorType === EditorType.Markdown) {
-      editorState.editor.action(replaceAll(activeTab.content));
+      editorRef.current.editor.action(replaceAll(activeTab.content));
+      console.log('Updating editor content');
     }
-  }, [activeValue, activeTab]);
+  }, [activeValue]);
 
   const handleChange = (event: React.SyntheticEvent, newValue: string) => {
     setActiveValue(newValue);
