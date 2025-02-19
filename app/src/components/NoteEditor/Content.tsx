@@ -26,13 +26,13 @@ interface DraggableTabsListProps {
 export default function DraggableTabsList(props: DraggableTabsListProps) {
   const { tabs, setTabs } = props;
   const { activeValue, setActiveValue } = props;
-  const editorRef = useRef<Crepe | null>(null);
+  const [editorState, setEditorState ] = React.useState<Crepe | null>(null);
   const activeTab = tabs.find(t => t.value === activeValue);
 
   // Create editor once when component mounts
   useEffect(() => {
     const createEditor = async () => {
-      if(editorRef.current) return;
+      if(editorState) return;
       const editorRoot = document.querySelector('#markdown-editor');
       if (!editorRoot) return;
 
@@ -55,25 +55,25 @@ export default function DraggableTabsList(props: DraggableTabsListProps) {
       });
 
       await editor.create();
-      editorRef.current = editor;
+      setEditorState(editor);
     };
 
     createEditor();
 
     return () => {
-      if (editorRef.current) {
-        editorRef.current.destroy();
-        editorRef.current = null;
+      if (editorState) {
+        editorState.destroy();
+        setEditorState(null);
       }
     };
   }, []); // Only run on mount
 
   // Update editor content when active tab changes
   useEffect(() => {
-    if (!activeTab || !editorRef.current) return;
+    if (!activeTab || !editorState) return;
     
     if (activeTab.editorType === EditorType.Markdown) {
-      editorRef.current.editor.action(replaceAll(activeTab.content || '# Untitled'));
+      editorState.editor.action(replaceAll(activeTab.content));
     }
   }, [activeValue, activeTab]);
 
