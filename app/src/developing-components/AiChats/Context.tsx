@@ -74,7 +74,7 @@ const TabContainer: React.FC = () => {
           />
         );
       })}
-      {droppableProvided?.placeholder}
+      {droppableProvided?.placeholder || null}
     </TabList>
   );
 

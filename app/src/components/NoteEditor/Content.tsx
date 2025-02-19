@@ -38,7 +38,7 @@ export default function DraggableTabsList(props: DraggableTabsListProps) {
 
       const editor = new Crepe({
         root: editorRoot,
-        defaultValue: '',
+        defaultValue: activeTab?.content || '',
       });
 
       editor.on(listener => {
@@ -48,7 +48,7 @@ export default function DraggableTabsList(props: DraggableTabsListProps) {
             currentTab.content = markdown;
             currentTab.saved = false;
             setTabs(prevTabs => prevTabs.map(t => 
-              t.value === activeValue ? {...t, content: markdown, saved: false} : t
+              t.value === activeValue ? currentTab : t
             ));
           }
         });
@@ -56,11 +56,6 @@ export default function DraggableTabsList(props: DraggableTabsListProps) {
 
       await editor.create();
       editorRef.current = editor;
-      if (!activeTab || !editorRef.current) return;
-    
-      if (activeTab.editorType === EditorType.Markdown) {
-        editorRef.current.editor.action(replaceAll(activeTab.content));
-      }
     };
 
     createEditor();
@@ -75,13 +70,13 @@ export default function DraggableTabsList(props: DraggableTabsListProps) {
 
   // Update editor content when active tab changes
   useEffect(() => {
+    const activeTab = tabs.find(t => t.value === activeValue);
     if (!activeTab || !editorRef.current) return;
-    
     if (activeTab.editorType === EditorType.Markdown) {
       editorRef.current.editor.action(replaceAll(activeTab.content));
       console.log('Updating editor content');
     }
-  }, [activeValue]);
+  }, [activeValue]);  
 
   const handleChange = (event: React.SyntheticEvent, newValue: string) => {
     setActiveValue(newValue);
@@ -103,52 +98,6 @@ export default function DraggableTabsList(props: DraggableTabsListProps) {
     setTabs(newTabs);
   };
 
-  const _renderTabList = (droppableProvided: DroppableProvided | undefined) => (
-    <TabList
-      onChange={handleChange}
-      aria-label="Draggable Tabs"
-      variant="scrollable"
-      className="draggable-tabs"
-      sx={{ overflowX: "auto", WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none', maxWidth: '100%' }}
-    >
-      {tabs.map((tab, index) => {
-        const child = <Tab 
-          label={tab.label} 
-          value={tab.value} 
-          key={index} 
-          icon={
-          <Box onClick={(e) => {
-            e.stopPropagation();
-            handleTabClose(tab.value);
-          }}>
-            {tab.saved ? <CloseIcon fontSize="small" /> : <CancelIcon fontSize="small" />}
-          </Box>
-          }
-          iconPosition="end"
-          sx={{ 
-            minWidth: 120,
-            minHeight: 40,
-            cursor: "drag",
-            overflow: "hidden",
-            whiteSpace: "nowrap",
-            textOverflow: "ellipsis",
-          }}
-        />;
-
-        return (
-          <DraggableTab
-            label={tab.label}
-            value={tab.value}
-            index={index}
-            key={index}
-            child={child}
-          />
-        );
-      })}
-      {droppableProvided ? droppableProvided.placeholder : null}
-    </TabList>
-  );
-
   const _renderTabListWrappedInDroppable = () => (
     <DragDropContext onDragEnd={onDragEnd}>
       <div style={{ 
@@ -163,7 +112,48 @@ export default function DraggableTabsList(props: DraggableTabsListProps) {
               ref={droppableProvided.innerRef}
               {...droppableProvided.droppableProps}
             >
-              {_renderTabList(droppableProvided)}
+              <TabList
+                onChange={handleChange}
+                aria-label="Draggable Tabs"
+                variant="scrollable"
+                className="draggable-tabs"
+                sx={{ overflowX: "auto", WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none', maxWidth: '100%' }}
+              >
+                {tabs.map((tab, index) => {
+                  const child = <Tab 
+                    label={tab.label} 
+                    value={tab.value} 
+                    key={index} 
+                    icon={
+                    <Box onClick={(e) => {
+                      e.stopPropagation();
+                      handleTabClose(tab.value);
+                    }}>
+                      {tab.saved ? <CloseIcon fontSize="small" /> : <CancelIcon fontSize="small" />}
+                    </Box>
+                    }
+                    iconPosition="end"
+                    sx={{ 
+                      minWidth: 120,
+                      minHeight: 40,
+                      cursor: "drag",
+                      overflow: "hidden",
+                      whiteSpace: "nowrap",
+                      textOverflow: "ellipsis",
+                    }}
+                  />;
+
+                  return (
+                    <DraggableTab
+                      label={tab.label}
+                      value={tab.value}
+                      index={index}
+                      key={index}
+                      child={child}
+                    />
+                  );
+                })}
+              </TabList>
             </div>
           )}
         </Droppable>

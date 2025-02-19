@@ -39,6 +39,10 @@ export default function EditorWithExplorer() {
         if (tabs.length > 0) 
           setActiveValue(tabs[0].value);
       }
+      if(await window.storeApi.has('activeValue')){
+        const activeValue = await window.storeApi.get('activeValue') as string;
+        setActiveValue(activeValue);
+      }
       setIsLoaded(true);
     };
     loadData();
@@ -50,8 +54,9 @@ export default function EditorWithExplorer() {
       window.storeApi.set('fileTree', items);
       window.storeApi.set('tabs', tabs);
       window.storeApi.set('expandedItems', expandedItems);
+      window.storeApi.set('activeValue', activeValue);
     }
-  }, [isLoaded, items, tabs, expandedItems]);
+  }, [isLoaded, items, tabs, expandedItems, activeValue]);
 
   const handleFileDoubleClick = async (clickedItems: string[]) => {
     // Only handle single file selection for now
@@ -80,22 +85,30 @@ export default function EditorWithExplorer() {
           return EditorType.Picture;
         case 'pdf':
           return EditorType.Pdf;
+        case 'folder':
+          return;
         default:
           return EditorType.Unsupported;
         }
     })();
+    if (!editorType) return;
     // Check if file is already open in a tab
     const existingTab = tabs.find(tab => tab.filePath === filePath);
-    if (existingTab) return;
+    if (existingTab) {
+        setActiveValue(existingTab.value);
+        return;
+    }
 
     try {
         // Read file content
         const content = await window.FileApi.readFile(filePath);
         // Create new tab
+        // Use timestamp to generate unique id and value
+        const timestamp = Date.now();
         const newTab: TabData = {
-            id: `tab${tabs.length + 1}`,
+            id: `tab${timestamp}`,
             label: selectedItem.label,
-            value: `${tabs.length + 1}`,
+            value: `${timestamp}`,
             saved: true,
             editorType: editorType,
             content: content,
@@ -108,7 +121,7 @@ export default function EditorWithExplorer() {
     }
   };
 
-  const saveTab = (tabValue:string) => {
+  const saveTab = React.useCallback((tabValue:string) => {
     const activeTab = tabs.find(tab => tab.value === tabValue);
     if (!activeTab || activeTab.saved) return;
     const { content, filePath } = activeTab;
@@ -119,7 +132,7 @@ export default function EditorWithExplorer() {
         tab.value === activeValue ? { ...tab, saved: true } : tab
       )
     );
-  }
+  }, [tabs, activeValue]);
   // handle save file
   React.useEffect(() => {
     const handleKeyDown = (event:KeyboardEvent) => {
@@ -134,7 +147,7 @@ export default function EditorWithExplorer() {
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [tabs, activeValue]);
+  }, [tabs, activeValue, saveTab]);
   const handleExpandedItemsChange = (event:unknown, newExpandedItems: string[]) => {
     setExpandedItems(newExpandedItems);
   }
