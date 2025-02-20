@@ -14,6 +14,8 @@ import {  } from "./FileExplorer/loadFiles";
 import { writeFileContent } from "./FileExplorer/loadFiles";
 import { EditorType, TabData, FileItem } from "./types";
 
+import { MilkdownProvider } from '@milkdown/react';
+
 
 export default function EditorWithExplorer() {
   const [tabs, setTabs] = React.useState<TabData[]>([]);
@@ -210,12 +212,14 @@ export default function EditorWithExplorer() {
             setItems={setItems}
           />
       </ResizablePanel>
-      <Content
-          tabs={tabs}
-          setTabs={setTabs}
-          activeValue={activeValue}
-          setActiveValue={setActiveValue}
-      />    
+      <MilkdownProvider>
+        <Content
+            tabs={tabs}
+            setTabs={setTabs}
+            activeValue={activeValue}
+            setActiveValue={setActiveValue}
+        />    
+      </MilkdownProvider> 
     </Box>
   );
 }

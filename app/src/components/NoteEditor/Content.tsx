@@ -4,6 +4,7 @@ import { Box } from "@mui/material";
 import TabContext from "@mui/lab/TabContext";
 import TabList from "@mui/lab/TabList";
 import { DragDropContext, Droppable, DropResult, DroppableProvided } from "@hello-pangea/dnd";
+import { Milkdown, MilkdownProvider, useEditor, useInstance } from '@milkdown/react';
 import DraggableTab from "./DraggableTab";
 import Tab from "@mui/material/Tab";
 import Stack from "@mui/material/Stack";
@@ -25,56 +26,40 @@ interface DraggableTabsListProps {
 
 export default function DraggableTabsList(props: DraggableTabsListProps) {
   const { tabs, setTabs } = props;
-  const { activeValue, setActiveValue } = props;
-  const editorRef = React.useRef<Crepe | null>(null);
+  const { activeValue, setActiveValue } = props
   const activeTab = tabs.find(t => t.value === activeValue);
+  const instance = useInstance()[1];
+  const editor = instance();
 
-  // Create editor once when component mounts
-  useEffect(() => {
-    const createEditor = async () => {
-      if(editorRef.current) return;
-      const editorRoot = document.querySelector('#markdown-editor');
-      if (!editorRoot) return;
-
-      const editor = new Crepe({
-        root: editorRoot,
-        defaultValue: activeTab?.content || '',
+  useEditor((root) => {
+    const editor = new Crepe({
+      root,
+      defaultValue: activeTab?.content,
+    });
+    editor.on(listener => {
+      listener.markdownUpdated((ctx, markdown) => {
+        console.log('Markdown updated, updating tab content');
+        const currentTab = tabs.find(t => t.value === activeValue);
+        if (currentTab) {
+          currentTab.content = markdown;
+          currentTab.saved = false;
+          setTabs(prevTabs => prevTabs.map(t => 
+            t.value === activeValue ? currentTab : t
+          ));
+        }
       });
+    });
+    return editor;
+  }, []);
 
-      editor.on(listener => {
-        listener.markdownUpdated((ctx, markdown) => {
-          const currentTab = tabs.find(t => t.value === activeValue);
-          if (currentTab) {
-            currentTab.content = markdown;
-            currentTab.saved = false;
-            setTabs(prevTabs => prevTabs.map(t => 
-              t.value === activeValue ? currentTab : t
-            ));
-          }
-        });
-      });
-
-      await editor.create();
-      editorRef.current = editor;
-    };
-
-    createEditor();
-
-    return () => {
-      if (editorRef.current) {
-        editorRef.current.destroy();
-        editorRef.current = null;
-      }
-    };
-  }, []); // Only run on mount
 
   // Update editor content when active tab changes
   useEffect(() => {
     const activeTab = tabs.find(t => t.value === activeValue);
-    if (!activeTab || !editorRef.current) return;
+    if (!activeTab || !editor ) return;
     if (activeTab.editorType === EditorType.Markdown) {
-      editorRef.current.editor.action(replaceAll(activeTab.content));
-      console.log('Updating editor content');
+      editor?.action(replaceAll(activeTab.content));
+      console.log('replace all', editor);
     }
   }, [activeValue]);  
 
@@ -174,7 +159,9 @@ export default function DraggableTabsList(props: DraggableTabsListProps) {
             style={{ 
               display: activeTab?.editorType === EditorType.Markdown ? 'block' : 'none' 
             }}
-          />
+          > 
+              <Milkdown />
+          </div>
         </Box>
       </TabContext>
     </Box>
