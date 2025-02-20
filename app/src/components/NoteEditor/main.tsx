@@ -32,18 +32,17 @@ export default function EditorWithExplorer() {
         setItems(fileTree);
       }
       if(await window.storeApi.has('expandedItems')){
-        const expandedItems = await window.storeApi.get('expandedItems') as string[];
-        setExpandedItems(expandedItems);
+        const ExpandedItems = await window.storeApi.get('expandedItems') as string[];
+        setExpandedItems(ExpandedItems);
       }
       if(await window.storeApi.has('tabs')){
-        const tabs = await window.storeApi.get('tabs') as TabData[];
-        setTabs(tabs);
-        if (tabs.length > 0) 
-          setActiveValue(tabs[0].value);
-      }
-      if(await window.storeApi.has('activeValue')){
-        const activeValue = await window.storeApi.get('activeValue') as string;
-        setActiveValue(activeValue);
+        const Tabs = await window.storeApi.get('tabs') as TabData[];
+        setTabs(Tabs);
+        if(await window.storeApi.has('activeValue')){
+          const ActiveValue = await window.storeApi.get('activeValue') as string;
+          console.log('activeValue', ActiveValue, Tabs.map((t) => t.value));
+          if(Tabs.map((t) => t.value).includes(ActiveValue)) setActiveValue(ActiveValue);
+        }
       }
       setIsLoaded(true);
     };

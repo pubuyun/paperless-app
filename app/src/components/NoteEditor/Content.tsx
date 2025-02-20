@@ -38,8 +38,8 @@ export default function DraggableTabsList(props: DraggableTabsListProps) {
     });
     editor.on(listener => {
       listener.markdownUpdated((ctx, markdown) => {
-        console.log('Markdown updated, updating tab content');
         const currentTab = tabs.find(t => t.value === activeValue);
+        console.log('Markdown updated, updating tab content to editor content', tabs, 'to be updated:', currentTab?.label);
         if (currentTab) {
           currentTab.content = markdown;
           currentTab.saved = false;
@@ -57,9 +57,10 @@ export default function DraggableTabsList(props: DraggableTabsListProps) {
   useEffect(() => {
     const activeTab = tabs.find(t => t.value === activeValue);
     if (!activeTab || !editor ) return;
+    console.log('activeTab', activeTab);
     if (activeTab.editorType === EditorType.Markdown) {
       editor?.action(replaceAll(activeTab.content));
-      console.log('replace all', editor);
+      console.log('replace all content to editor', tabs, "active:", activeTab.label);
     }
   }, [activeValue]);  
 
