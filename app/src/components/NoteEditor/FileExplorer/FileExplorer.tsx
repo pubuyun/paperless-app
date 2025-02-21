@@ -29,8 +29,8 @@ import ImageIcon from '@mui/icons-material/Image';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 import VideoCameraBackIcon from '@mui/icons-material/VideoCameraBack';
 // -----------------------
-
-import { FileType, FileItem, loadDirectoryContents, createFile, createDirectory, deleteItem } from './loadFiles';
+import { FileType, FileItem } from './types';
+import { loadDirectoryContents, createFile, createDirectory, deleteItem, sortItems, isExpandable } from './loadFiles';
 
 interface CustomLabelProps {
   icon?: SvgIconComponent;
@@ -250,14 +250,6 @@ const CustomTreeItem = React.forwardRef<HTMLLIElement, CustomTreeItemProps>(
 // ------------- end components ----------------
 
 // ------------- logic ----------------
-
-const isExpandable = (reactChildren: React.ReactNode): boolean => {
-  if (Array.isArray(reactChildren)) {
-    return reactChildren.length > 0 && reactChildren.some(isExpandable);
-  }
-  return Boolean(reactChildren);
-};
-
 const getIconFromFileType = (fileType: FileType) => {
   switch (fileType) {
     case 'image':
@@ -278,6 +270,7 @@ const getIconFromFileType = (fileType: FileType) => {
       return ArticleIcon;
   }
 };
+
 
 export default function MultiSelectFileExplorer({
     defaultExpandedItems = ['1', '1.1'],
@@ -318,25 +311,6 @@ export default function MultiSelectFileExplorer({
         return 'doc';
     }
   };
-  const sortItems = (items: FileItem[]): FileItem[] => {
-    return items.sort((a, b) => {
-      // First sort by type (folders first)
-      if ((a.fileType === 'folder') !== (b.fileType === 'folder')) {
-        return a.fileType === 'folder' ? -1 : 1;
-      }
-      // Then sort alphabetically by label
-      return a.label.localeCompare(b.label);
-    }).map(item => {
-      // Recursively sort children if they exist
-      if (item.fileType === 'folder' && item.children) {
-        return {
-          ...item,
-          children: sortItems(item.children)
-        };
-      }
-      return item;
-    });
-  };
 
   const updateItemsRecursively = (items: FileItem[], parentPath: string, newFile: FileItem): FileItem[] => {
     return items.map(item => {
@@ -358,14 +332,13 @@ export default function MultiSelectFileExplorer({
     if (!dialogResult.canceled && dialogResult.filePaths.length > 0) {
       const folderPath = dialogResult.filePaths[0];
       const contents = await loadDirectoryContents(folderPath);
-      
       const newFolder = {
         id: folderPath,
         label: folderPath,
         fileType: 'folder' as const,
         children: sortItems(contents)
       };
-
+      window.storeApi.set('folderPath', folderPath);
       setItems([newFolder]);
       onItemsChange?.([newFolder]);
     }

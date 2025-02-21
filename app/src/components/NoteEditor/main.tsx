@@ -9,9 +9,9 @@ import DeleteIcon from '@mui/icons-material/Delete';
 
 import MultiSelectFileExplorer from './FileExplorer/FileExplorer';
 import { Button } from '@mui/material';
-import {  } from "./FileExplorer/loadFiles";
+import { loadDirectoryContents } from "./FileExplorer/loadFiles";
 
-import { writeFileContent } from "./FileExplorer/loadFiles";
+import { writeFileContent, sortItems, } from "./FileExplorer/loadFiles";
 import { EditorType, TabData, FileItem } from "./types";
 
 import { MilkdownProvider } from '@milkdown/react';
@@ -27,21 +27,31 @@ export default function EditorWithExplorer() {
   // Load file tree and tabs on mount
   React.useEffect(() => {
     const loadData = async () => {
-      if(await window.storeApi.has('fileTree')){
-        const fileTree = await window.storeApi.get('fileTree') as FileItem[];
-        setItems(fileTree);
-      }
-      if(await window.storeApi.has('expandedItems')){
-        const ExpandedItems = await window.storeApi.get('expandedItems') as string[];
-        setExpandedItems(ExpandedItems);
+      if(await window.storeApi.has('folderPath')){
+        const folderPath = await window.storeApi.get('folderPath') as string;
+        const contents = await loadDirectoryContents(folderPath);
+        const newFolder = {
+          id: folderPath,
+          label: folderPath,
+          fileType: 'folder' as const,
+          children: sortItems(contents)
+        };
+        setItems([newFolder]);
+        if(await window.storeApi.has('expandedItems')){
+          const ExpandedItems = await window.storeApi.get('expandedItems') as string[];
+          setExpandedItems(ExpandedItems);
+        }
       }
       if(await window.storeApi.has('tabs')){
         const Tabs = await window.storeApi.get('tabs') as TabData[];
         setTabs(Tabs);
+        console.log('tabs loaded', Tabs);
         if(await window.storeApi.has('activeValue')){
           const ActiveValue = await window.storeApi.get('activeValue') as string;
           console.log('activeValue', ActiveValue, Tabs.map((t) => t.value));
           if(Tabs.map((t) => t.value).includes(ActiveValue)) setActiveValue(ActiveValue);
+        } else {
+          setActiveValue(Tabs[0].value);
         }
       }
       setIsLoaded(true);
@@ -52,12 +62,11 @@ export default function EditorWithExplorer() {
   // Save file tree and tabs when they change, but only after initial load
   React.useEffect(() => {
     if (isLoaded) {
-      window.storeApi.set('fileTree', items);
       window.storeApi.set('tabs', tabs);
       window.storeApi.set('expandedItems', expandedItems);
       window.storeApi.set('activeValue', activeValue);
     }
-  }, [isLoaded, items, tabs, expandedItems, activeValue]);
+  }, [tabs, expandedItems, activeValue]);
 
   const handleFileDoubleClick = async (clickedItems: string[]) => {
     // Only handle single file selection for now
@@ -135,20 +144,15 @@ export default function EditorWithExplorer() {
     );
   }, [tabs, activeValue]);
   // handle save file
-  React.useEffect(() => {
-    const handleKeyDown = (event:KeyboardEvent) => {
-      // detect Ctrl + S（Windows/Linux）or ⌘ + S（Mac）
-      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "s") {
-        event.preventDefault(); 
-        saveTab(activeValue);
-      }
-    };
-    window.removeEventListener("keydown", handleKeyDown);
-    window.addEventListener("keydown", handleKeyDown);
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [tabs, activeValue, saveTab]);
+  const handleKeyDown = React.useCallback((event:KeyboardEvent) => {
+    // detect Ctrl + S（Windows/Linux）or ⌘ + S（Mac）
+    if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "s") {
+      event.preventDefault(); 
+      saveTab(activeValue);
+    }
+  }, [saveTab, activeValue]);
+  window.removeEventListener("keydown", handleKeyDown);
+  window.addEventListener("keydown", handleKeyDown);
   const handleExpandedItemsChange = (event:unknown, newExpandedItems: string[]) => {
     setExpandedItems(newExpandedItems);
   }

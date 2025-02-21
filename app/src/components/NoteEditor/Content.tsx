@@ -1,10 +1,11 @@
 import * as React from "react";
-import { useEffect, useRef } from "react";
+import { useEffect, useCallback } from "react";
 import { Box } from "@mui/material";
 import TabContext from "@mui/lab/TabContext";
 import TabList from "@mui/lab/TabList";
-import { DragDropContext, Droppable, DropResult, DroppableProvided } from "@hello-pangea/dnd";
-import { Milkdown, MilkdownProvider, useEditor, useInstance } from '@milkdown/react';
+import { DragDropContext, Droppable, DropResult } from "@hello-pangea/dnd";
+import { Milkdown, useEditor, useInstance } from '@milkdown/react';
+import { Ctx } from "@milkdown/kit/ctx";
 import DraggableTab from "./DraggableTab";
 import Tab from "@mui/material/Tab";
 import Stack from "@mui/material/Stack";
@@ -14,6 +15,7 @@ import { Crepe } from '@milkdown/crepe';
 import "@milkdown/crepe/theme/common/style.css";
 import "@milkdown/crepe/theme/frame.css";
 import { replaceAll } from "@milkdown/kit/utils";
+import { editorViewCtx, serializerCtx } from "@milkdown/kit/core";
 import { TabData, EditorType } from "./types";
 import './Content.css';
 
@@ -31,27 +33,32 @@ export default function DraggableTabsList(props: DraggableTabsListProps) {
   const instance = useInstance()[1];
   const editor = instance();
 
+  // Create a stable callback for updating tab content
+  const handleMarkdownUpdate = useCallback((markdown: string) => {
+    console.log('Markdown updated, updating tab content to editor content', tabs, 'to be updated:', activeTab?.label);
+    if (activeTab) {
+      activeTab.content = markdown;
+      activeTab.saved = false;
+      setTabs(prevTabs => prevTabs.map(t => 
+        t.id === activeTab.id ? activeTab : t
+      ));
+    }
+  }, [tabs, activeTab, setTabs]);
+  
+  // Create editor instance and set up listeners
   useEditor((root) => {
     const editor = new Crepe({
       root,
       defaultValue: activeTab?.content,
     });
     editor.on(listener => {
+      console.log('editor listener on', listener);
       listener.markdownUpdated((ctx, markdown) => {
-        const currentTab = tabs.find(t => t.value === activeValue);
-        console.log('Markdown updated, updating tab content to editor content', tabs, 'to be updated:', currentTab?.label);
-        if (currentTab) {
-          currentTab.content = markdown;
-          currentTab.saved = false;
-          setTabs(prevTabs => prevTabs.map(t => 
-            t.value === activeValue ? currentTab : t
-          ));
-        }
+        handleMarkdownUpdate(markdown);
       });
     });
     return editor;
   }, []);
-
 
   // Update editor content when active tab changes
   useEffect(() => {

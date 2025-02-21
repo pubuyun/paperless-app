@@ -1,6 +1,34 @@
 
 import { FileItem, CreateOptions, CopyOptions, FileType, FileTreeItem } from '../types';
 
+export const sortItems = (items: FileItem[]): FileItem[] => {
+  return items.sort((a, b) => {
+    // First sort by type (folders first)
+    if ((a.fileType === 'folder') !== (b.fileType === 'folder')) {
+      return a.fileType === 'folder' ? -1 : 1;
+    }
+    // Then sort alphabetically by label
+    return a.label.localeCompare(b.label);
+  }).map(item => {
+    // Recursively sort children if they exist
+    if (item.fileType === 'folder' && item.children) {
+      return {
+        ...item,
+        children: sortItems(item.children)
+      };
+    }
+    return item;
+  });
+};
+
+export const isExpandable = (reactChildren: React.ReactNode): boolean => {
+  if (Array.isArray(reactChildren)) {
+    return reactChildren.length > 0 && reactChildren.some(isExpandable);
+  }
+  return Boolean(reactChildren);
+};
+
+
 // Helper function to convert flat file list to tree structure
 export async function buildFileTree(files: FileItem[], parentId?: string, level = 0): Promise<FileTreeItem[]> {
   const filteredFiles = await Promise.all(files.filter(async file => {

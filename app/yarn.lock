@@ -1375,7 +1375,7 @@
     tslib "^2.8.1"
     unified "^11.0.3"
 
-"@milkdown/crepe@^7.6.2":
+"@milkdown/crepe@7.6.3", "@milkdown/crepe@^7.6.2":
   version "7.6.3"
   resolved "https://registry.npmmirror.com/@milkdown/crepe/-/crepe-7.6.3.tgz#a00a83098091d83e793fd5ca96f67d8fe729046a"
   integrity sha512-90UCmFpmJraNk8X1QMq0qb2VQzGrpuLnwU5nTVTtIqkMg5/ZbuZ4ey/1CxX+9tWRg0k/CRo0f9QRc6K22YuYYw==
@@ -1573,6 +1573,15 @@
     prosemirror-tables "^1.6.2"
     prosemirror-transform "^1.10.2"
     prosemirror-view "^1.37.1"
+    tslib "^2.8.1"
+
+"@milkdown/react@^7.6.3":
+  version "7.6.3"
+  resolved "https://registry.npmmirror.com/@milkdown/react/-/react-7.6.3.tgz#c1b11b5a09b3e223b12c943f88f0f5f293dbbe79"
+  integrity sha512-7XO57aK/SB35bxt4z8G/RN/85fXUR0t+akjLL31esSO9WMNrk0rnSvk+sxIGc/xJj8qPLcihUhafM8qYQZ/Tmw==
+  dependencies:
+    "@milkdown/crepe" "7.6.3"
+    "@milkdown/kit" "7.6.3"
     tslib "^2.8.1"
 
 "@milkdown/transformer@7.6.3":
