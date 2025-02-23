@@ -4,8 +4,7 @@ import { Box } from "@mui/material";
 import TabContext from "@mui/lab/TabContext";
 import TabList from "@mui/lab/TabList";
 import { DragDropContext, Droppable, DropResult } from "@hello-pangea/dnd";
-import { Milkdown, useEditor, useInstance } from '@milkdown/react';
-import { Ctx } from "@milkdown/kit/ctx";
+import { Milkdown, useEditor } from '@milkdown/react';
 import DraggableTab from "./DraggableTab";
 import Tab from "@mui/material/Tab";
 import Stack from "@mui/material/Stack";
@@ -15,7 +14,6 @@ import { Crepe } from '@milkdown/crepe';
 import "@milkdown/crepe/theme/common/style.css";
 import "@milkdown/crepe/theme/frame.css";
 import { replaceAll } from "@milkdown/kit/utils";
-import { editorViewCtx, serializerCtx } from "@milkdown/kit/core";
 import { TabData, EditorType } from "./types";
 import './Content.css';
 
@@ -29,24 +27,11 @@ interface DraggableTabsListProps {
 export default function DraggableTabsList(props: DraggableTabsListProps) {
   const { tabs, setTabs } = props;
   const { activeValue, setActiveValue } = props
+  const [ content, setContent ] = React.useState('');
   const activeTab = tabs.find(t => t.value === activeValue);
-  const instance = useInstance()[1];
-  const editor = instance();
-
-  // Create a stable callback for updating tab content
-  const handleMarkdownUpdate = useCallback((markdown: string) => {
-    console.log('Markdown updated, updating tab content to editor content', tabs, 'to be updated:', activeTab?.label);
-    if (activeTab) {
-      activeTab.content = markdown;
-      activeTab.saved = false;
-      setTabs(prevTabs => prevTabs.map(t => 
-        t.id === activeTab.id ? activeTab : t
-      ));
-    }
-  }, [tabs, activeTab, setTabs]);
   
   // Create editor instance and set up listeners
-  useEditor((root) => {
+  const { get } = useEditor((root) => {
     const editor = new Crepe({
       root,
       defaultValue: activeTab?.content,
@@ -54,13 +39,18 @@ export default function DraggableTabsList(props: DraggableTabsListProps) {
     editor.on(listener => {
       console.log('editor listener on', listener);
       listener.markdownUpdated((ctx, markdown) => {
-        handleMarkdownUpdate(markdown);
+        setContent(markdown);
       });
     });
     return editor;
   }, []);
+  const editor = get();
+  // Update tabs if content changes
+  useEffect(() => {
+    console.log('content changed', activeValue, content);
+    setTabs((prevtabs) => prevtabs.map(tab => tab.value === activeValue ? { ...tab, content } : tab)); 
+  }, [activeValue, content, setTabs]);
 
-  // Update editor content when active tab changes
   useEffect(() => {
     const activeTab = tabs.find(t => t.value === activeValue);
     if (!activeTab || !editor ) return;
@@ -122,7 +112,7 @@ export default function DraggableTabsList(props: DraggableTabsListProps) {
                       e.stopPropagation();
                       handleTabClose(tab.value);
                     }}>
-                      {tab.saved ? <CloseIcon fontSize="small" /> : <CancelIcon fontSize="small" />}
+                      {tab.content == tab.savedContent && tab.content ? <CloseIcon fontSize="small" /> : <CancelIcon fontSize="small" />}
                     </Box>
                     }
                     iconPosition="end"

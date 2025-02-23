@@ -27,33 +27,8 @@ export default function EditorWithExplorer() {
   // Load file tree and tabs on mount
   React.useEffect(() => {
     const loadData = async () => {
-      if(await window.storeApi.has('folderPath')){
-        const folderPath = await window.storeApi.get('folderPath') as string;
-        const contents = await loadDirectoryContents(folderPath);
-        const newFolder = {
-          id: folderPath,
-          label: folderPath,
-          fileType: 'folder' as const,
-          children: sortItems(contents)
-        };
-        setItems([newFolder]);
-        if(await window.storeApi.has('expandedItems')){
-          const ExpandedItems = await window.storeApi.get('expandedItems') as string[];
-          setExpandedItems(ExpandedItems);
-        }
-      }
-      if(await window.storeApi.has('tabs')){
-        const Tabs = await window.storeApi.get('tabs') as TabData[];
-        setTabs(Tabs);
-        console.log('tabs loaded', Tabs);
-        if(await window.storeApi.has('activeValue')){
-          const ActiveValue = await window.storeApi.get('activeValue') as string;
-          console.log('activeValue', ActiveValue, Tabs.map((t) => t.value));
-          if(Tabs.map((t) => t.value).includes(ActiveValue)) setActiveValue(ActiveValue);
-        } else {
-          setActiveValue(Tabs[0].value);
-        }
-      }
+      
+    
       setIsLoaded(true);
     };
     loadData();
@@ -62,11 +37,9 @@ export default function EditorWithExplorer() {
   // Save file tree and tabs when they change, but only after initial load
   React.useEffect(() => {
     if (isLoaded) {
-      window.storeApi.set('tabs', tabs);
-      window.storeApi.set('expandedItems', expandedItems);
-      window.storeApi.set('activeValue', activeValue);
+
     }
-  }, [tabs, expandedItems, activeValue]);
+  }, []);
 
   const handleFileDoubleClick = async (clickedItems: string[]) => {
     // Only handle single file selection for now
@@ -111,17 +84,16 @@ export default function EditorWithExplorer() {
 
     try {
         // Read file content
-        const content = await window.FileApi.readFile(filePath);
+        const Content = await window.FileApi.readFile(filePath);
         // Create new tab
         // Use timestamp to generate unique id and value
-        const timestamp = Date.now();
         const newTab: TabData = {
-            id: `tab${timestamp}`,
+            id: `tab${filePath}`,
             label: selectedItem.label,
-            value: `${timestamp}`,
-            saved: true,
+            value: filePath,
+            savedContent: Content,
             editorType: editorType,
-            content: content,
+            content: Content,
             filePath: filePath
         };
         setTabs(prevTabs => [...prevTabs, newTab]);
@@ -133,16 +105,13 @@ export default function EditorWithExplorer() {
 
   const saveTab = React.useCallback((tabValue:string) => {
     const activeTab = tabs.find(tab => tab.value === tabValue);
-    if (!activeTab || activeTab.saved) return;
+    if (!activeTab || (activeTab.savedContent === activeTab.content)) return;
     const { content, filePath } = activeTab;
     if (!filePath) return;
     writeFileContent(filePath, content);
-    setTabs(prevTabs =>
-      prevTabs.map(tab =>
-        tab.value === activeValue ? { ...tab, saved: true } : tab
-      )
-    );
-  }, [tabs, activeValue]);
+    // Update saved content
+    setTabs(tabs.map(tab => tab.value === tabValue ? { ...tab, savedContent: content } : tab));
+  }, [tabs]);
   // handle save file
   const handleKeyDown = React.useCallback((event:KeyboardEvent) => {
     // detect Ctrl + S（Windows/Linux）or ⌘ + S（Mac）

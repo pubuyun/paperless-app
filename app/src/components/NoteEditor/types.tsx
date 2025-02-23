@@ -9,7 +9,7 @@ export interface TabData {
   id: string;
   label: string;
   value: string;
-  saved: boolean;
+  savedContent: string;
   editorType: EditorType;
   content: string;
   filePath?: string; // Store the actual file path for saving
