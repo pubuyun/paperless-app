@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useEffect, useCallback } from "react";
+import { useEffect } from "react";
 import { Box } from "@mui/material";
 import TabContext from "@mui/lab/TabContext";
 import TabList from "@mui/lab/TabList";
@@ -15,6 +15,7 @@ import "@milkdown/crepe/theme/common/style.css";
 import "@milkdown/crepe/theme/frame.css";
 import { replaceAll } from "@milkdown/kit/utils";
 import { TabData, EditorType } from "./types";
+import { writeFileContent } from "./FileExplorer/loadFiles";
 import './Content.css';
 
 interface DraggableTabsListProps {
@@ -26,11 +27,37 @@ interface DraggableTabsListProps {
 
 export default function DraggableTabsList(props: DraggableTabsListProps) {
   const { tabs, setTabs } = props;
-  const { activeValue, setActiveValue } = props
+  const { activeValue, setActiveValue } = props;
   const [ content, setContent ] = React.useState('');
+
+  // Handle keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = async (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault();
+        const activeTab = tabs.find(t => t.value === activeValue);
+        if (activeTab) {
+          try {
+            await writeFileContent(activeTab.filePath, activeTab.content);
+            // Update the savedContent to match the current content
+            setTabs(prevTabs => prevTabs.map(tab => 
+              tab.value === activeValue 
+                ? { ...tab, savedContent: tab.content }
+                : tab
+            ));
+          } catch (error) {
+            console.error('Failed to save file:', error);
+          }
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [tabs, activeValue, setTabs]);
+
   const activeTab = tabs.find(t => t.value === activeValue);
-  const prevActiveTab = React.useRef(activeTab);
-  const prevContent = React.useRef(content);
+  
   // Create editor instance and set up listeners
   const { get } = useEditor((root) => {
     const editor = new Crepe({
@@ -48,20 +75,19 @@ export default function DraggableTabsList(props: DraggableTabsListProps) {
   const editor = get();
   // Update tabs if content changes
   useEffect(() => {
+    console.log('content changed', activeValue, content);
+    setTabs((prevtabs) => prevtabs.map(tab => tab.value === activeValue ? { ...tab, content } : tab)); 
+  }, [activeValue, content, setTabs]);
+
+  useEffect(() => {
+    const activeTab = tabs.find(t => t.value === activeValue);
     if (!activeTab || !editor ) return;
-    if (prevActiveTab.current !== activeTab) {
-      prevActiveTab.current = activeTab;
-      console.log('activeTab', activeTab);
-      if (activeTab.editorType === EditorType.Markdown) {
-        editor?.action(replaceAll(activeTab.content));
-        console.log('replace all content to editor', tabs, "active:", activeTab.label);
-      }
-    } else if (prevContent.current !== content) {
-      console.log('content changed', activeValue, content);
-      setTabs((prevtabs) => prevtabs.map(tab => tab.id === activeTab.id ? { ...tab, content } : tab)); 
-      prevContent.current = content;
+    console.log('activeTab', activeTab);
+    if (activeTab.editorType === EditorType.Markdown) {
+      editor?.action(replaceAll(activeTab.content));
+      console.log('replace all content to editor', tabs, "active:", activeTab.label);
     }
-  }, [activeTab, content, setTabs]);
+  }, [activeValue]);  
 
   const handleChange = (event: React.SyntheticEvent, newValue: string) => {
     setActiveValue(newValue);
@@ -70,8 +96,9 @@ export default function DraggableTabsList(props: DraggableTabsListProps) {
   const handleTabClose = async (tabValue: string) => {
     const newTabs = tabs.filter((tab) => tab.value !== tabValue);
     setTabs(newTabs);
-    if (activeValue === tabValue && newTabs.length > 0) {
-      setActiveValue(newTabs[0].value);
+    if (activeValue === tabValue) {
+      if (newTabs.length > 0) setActiveValue(newTabs[0].value);
+      else setActiveValue("0");
     }
   };
 
