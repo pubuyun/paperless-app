@@ -27,8 +27,46 @@ export default function EditorWithExplorer() {
   // Load file tree and tabs on mount
   React.useEffect(() => {
     const loadData = async () => {
-      
-    
+      if (await window.storeApi.has('fileTree')) {
+        const fileTree = await window.storeApi.get('fileTree') as FileItem[];
+        if (fileTree){
+          const Items = await loadDirectoryContents(fileTree[0].id);
+          setItems(sortItems(Items));
+          console.log('Items:', Items);
+          if(await window.storeApi.has('tabs')){
+            const Tabs = await window.storeApi.get('tabs') as TabData[];
+            if (Tabs){
+              for (const Tab of Tabs) {
+                try {
+                  // Read file content
+                  const Content = await window.FileApi.readFile(Tab.filePath);
+                  // Create new tab
+                  const newTab: TabData = {
+                      id: `tab${Tab.filePath}`,
+                      label: Tab.label,
+                      value: Tab.filePath,
+                      savedContent: Content,
+                      editorType: Tab.editorType,
+                      content: Content,
+                      filePath: Tab.filePath
+                  };
+                  setTabs(prevTabs => [...prevTabs, newTab]);
+                } catch (error) {
+                    console.error('Error opening file:', error);
+                }
+              }
+              if(await window.storeApi.has('activeValue')){
+                const ActiveValue = await window.storeApi.get('activeValue') as string;
+                if (ActiveValue){
+                  setActiveValue(ActiveValue);
+                  return;
+                }
+              }
+              setActiveValue(Tabs[0].value);
+            }
+          }
+        }
+      }
       setIsLoaded(true);
     };
     loadData();
@@ -36,10 +74,12 @@ export default function EditorWithExplorer() {
 
   // Save file tree and tabs when they change, but only after initial load
   React.useEffect(() => {
-    if (isLoaded) {
-
+    if (isLoaded && items) {
+      window.storeApi.set('fileTree', items);
+      window.storeApi.set('tabs', tabs);
+      window.storeApi.set('activeValue', activeValue);
     }
-  }, []);
+  }, [activeValue, isLoaded, items, tabs]);
 
   const handleFileDoubleClick = async (clickedItems: string[]) => {
     // Only handle single file selection for now

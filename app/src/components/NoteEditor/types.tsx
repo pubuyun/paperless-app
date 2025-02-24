@@ -12,7 +12,7 @@ export interface TabData {
   savedContent: string;
   editorType: EditorType;
   content: string;
-  filePath?: string; // Store the actual file path for saving
+  filePath: string; // Store the actual file path for saving
 }
 // Event types for file operations
 export interface FileOperationEvent {

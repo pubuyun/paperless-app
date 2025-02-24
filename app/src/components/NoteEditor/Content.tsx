@@ -29,7 +29,8 @@ export default function DraggableTabsList(props: DraggableTabsListProps) {
   const { activeValue, setActiveValue } = props
   const [ content, setContent ] = React.useState('');
   const activeTab = tabs.find(t => t.value === activeValue);
-  
+  const prevActiveTab = React.useRef(activeTab);
+  const prevContent = React.useRef(content);
   // Create editor instance and set up listeners
   const { get } = useEditor((root) => {
     const editor = new Crepe({
@@ -47,19 +48,20 @@ export default function DraggableTabsList(props: DraggableTabsListProps) {
   const editor = get();
   // Update tabs if content changes
   useEffect(() => {
-    console.log('content changed', activeValue, content);
-    setTabs((prevtabs) => prevtabs.map(tab => tab.value === activeValue ? { ...tab, content } : tab)); 
-  }, [activeValue, content, setTabs]);
-
-  useEffect(() => {
-    const activeTab = tabs.find(t => t.value === activeValue);
     if (!activeTab || !editor ) return;
-    console.log('activeTab', activeTab);
-    if (activeTab.editorType === EditorType.Markdown) {
-      editor?.action(replaceAll(activeTab.content));
-      console.log('replace all content to editor', tabs, "active:", activeTab.label);
+    if (prevActiveTab.current !== activeTab) {
+      prevActiveTab.current = activeTab;
+      console.log('activeTab', activeTab);
+      if (activeTab.editorType === EditorType.Markdown) {
+        editor?.action(replaceAll(activeTab.content));
+        console.log('replace all content to editor', tabs, "active:", activeTab.label);
+      }
+    } else if (prevContent.current !== content) {
+      console.log('content changed', activeValue, content);
+      setTabs((prevtabs) => prevtabs.map(tab => tab.id === activeTab.id ? { ...tab, content } : tab)); 
+      prevContent.current = content;
     }
-  }, [activeValue]);  
+  }, [activeTab, content, setTabs]);
 
   const handleChange = (event: React.SyntheticEvent, newValue: string) => {
     setActiveValue(newValue);
