@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useEffect, useCallback } from "react";
+import { useEffect } from "react";
 import { Box } from "@mui/material";
 import TabContext from "@mui/lab/TabContext";
 import TabList from "@mui/lab/TabList";
@@ -15,6 +15,7 @@ import "@milkdown/crepe/theme/common/style.css";
 import "@milkdown/crepe/theme/frame.css";
 import { replaceAll } from "@milkdown/kit/utils";
 import { TabData, EditorType } from "./types";
+import { writeFileContent } from "./FileExplorer/loadFiles";
 import './Content.css';
 
 interface DraggableTabsListProps {
@@ -26,8 +27,35 @@ interface DraggableTabsListProps {
 
 export default function DraggableTabsList(props: DraggableTabsListProps) {
   const { tabs, setTabs } = props;
-  const { activeValue, setActiveValue } = props
+  const { activeValue, setActiveValue } = props;
   const [ content, setContent ] = React.useState('');
+
+  // Handle keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = async (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault();
+        const activeTab = tabs.find(t => t.value === activeValue);
+        if (activeTab) {
+          try {
+            await writeFileContent(activeTab.filePath, activeTab.content);
+            // Update the savedContent to match the current content
+            setTabs(prevTabs => prevTabs.map(tab => 
+              tab.value === activeValue 
+                ? { ...tab, savedContent: tab.content }
+                : tab
+            ));
+          } catch (error) {
+            console.error('Failed to save file:', error);
+          }
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [tabs, activeValue, setTabs]);
+
   const activeTab = tabs.find(t => t.value === activeValue);
   
   // Create editor instance and set up listeners
@@ -68,8 +96,9 @@ export default function DraggableTabsList(props: DraggableTabsListProps) {
   const handleTabClose = async (tabValue: string) => {
     const newTabs = tabs.filter((tab) => tab.value !== tabValue);
     setTabs(newTabs);
-    if (activeValue === tabValue && newTabs.length > 0) {
-      setActiveValue(newTabs[0].value);
+    if (activeValue === tabValue) {
+      if (newTabs.length > 0) setActiveValue(newTabs[0].value);
+      else setActiveValue("0");
     }
   };
 

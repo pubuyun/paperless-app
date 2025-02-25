@@ -174,7 +174,7 @@ export async function pathJoin(...paths: string[]): Promise<string> {
   return window.FileApi.pathJoin(...paths);
 }
 
-// Sample data structure
+
 // File system operations
 export async function loadDirectoryContents(dirPath: string): Promise<FileItem[]> {
   const items: FileItem[] = [];
