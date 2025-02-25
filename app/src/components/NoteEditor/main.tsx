@@ -16,7 +16,6 @@ import { EditorType, TabData, FileItem } from "./types";
 
 import { MilkdownProvider } from '@milkdown/react';
 
-
 export default function EditorWithExplorer() {
   const [tabs, setTabs] = React.useState<TabData[]>([]);
   const [items, setItems] = React.useState<FileItem[]>([]);
@@ -27,19 +26,70 @@ export default function EditorWithExplorer() {
   // Load file tree and tabs on mount
   React.useEffect(() => {
     const loadData = async () => {
-      
-    
+      if (await window.storeApi.has('fileTree')) {
+        const fileTree = await window.storeApi.get('fileTree') as FileItem[];
+        if (fileTree){
+          console.log(fileTree)
+          const folderPath = fileTree[0].id;
+          const contents = await loadDirectoryContents(folderPath);
+          const newFolder = {
+            id: folderPath,
+            label: folderPath,
+            fileType: 'folder' as const,
+            children: sortItems(contents)
+          };
+          setItems([newFolder]);
+          if (await window.storeApi.has('expandedItems')) {
+            const ExpandedItems = await window.storeApi.get('expandedItems') as string[];
+            if (ExpandedItems) {
+              setExpandedItems(ExpandedItems);
+            }
+          }
+        }
+        // if(await window.storeApi.has('tabs')){
+        //   const Tabs = await window.storeApi.get('tabs') as TabData[];
+        //   if (Tabs){
+        //     await Promise.all(
+        //       Tabs.map(async (Tab) => {
+        //         try {
+        //           const Content = await window.FileApi.readFile(Tab.filePath);
+        //           if (Content !== Tab.savedContent) {
+        //             return { ...Tab, savedContent: Content };
+        //           }
+        //           return Tab;
+        //         } catch (error) {
+        //           console.error('Error opening file:', error);
+        //         }
+        //       })
+        //     );
+        //     setTabs(Tabs);
+        //     if(await window.storeApi.has('activeValue')){
+        //       const ActiveValue = await window.storeApi.get('activeValue') as string;
+        //       if (ActiveValue){
+        //         setActiveValue(ActiveValue);
+        //       }
+        //     }
+        //   }
+        // }
+      }
       setIsLoaded(true);
     };
     loadData();
   }, []); // Only run on mount
-
-  // Save file tree and tabs when they change, but only after initial load
-  React.useEffect(() => {
+  const saveState = React.useCallback(() => {
     if (isLoaded) {
-
+      window.storeApi.set('fileTree', items);
+      window.storeApi.set('expandedItems', expandedItems)
+      // window.storeApi.set('tabs', tabs);
+      // window.storeApi.set('activeValue', activeValue);
     }
-  }, []);
+  }, [expandedItems, isLoaded, items]);
+  // Save state when app is closed or when component unmounts
+  React.useEffect(() => {
+    return () => {
+      saveState(); // Save one last time when unmounting
+    };
+  }, [saveState]);
 
   const handleFileDoubleClick = async (clickedItems: string[]) => {
     // Only handle single file selection for now
@@ -103,25 +153,7 @@ export default function EditorWithExplorer() {
     }
   };
 
-  const saveTab = React.useCallback((tabValue:string) => {
-    const activeTab = tabs.find(tab => tab.value === tabValue);
-    if (!activeTab || (activeTab.savedContent === activeTab.content)) return;
-    const { content, filePath } = activeTab;
-    if (!filePath) return;
-    writeFileContent(filePath, content);
-    // Update saved content
-    setTabs(tabs.map(tab => tab.value === tabValue ? { ...tab, savedContent: content } : tab));
-  }, [tabs]);
-  // handle save file
-  const handleKeyDown = React.useCallback((event:KeyboardEvent) => {
-    // detect Ctrl + S（Windows/Linux）or ⌘ + S（Mac）
-    if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "s") {
-      event.preventDefault(); 
-      saveTab(activeValue);
-    }
-  }, [saveTab, activeValue]);
-  window.removeEventListener("keydown", handleKeyDown);
-  window.addEventListener("keydown", handleKeyDown);
+
   const handleExpandedItemsChange = (event:unknown, newExpandedItems: string[]) => {
     setExpandedItems(newExpandedItems);
   }
