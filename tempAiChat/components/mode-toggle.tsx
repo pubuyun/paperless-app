@@ -4,6 +4,8 @@ import { useTheme } from "next-themes"
 
 import { Button } from "@/components/ui/button"
 
+//remove snappiness and add back 1sec transition?
+
 export function ModeToggle() {
   const { theme, setTheme } = useTheme()
 

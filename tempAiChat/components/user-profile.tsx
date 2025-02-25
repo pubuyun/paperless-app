@@ -12,7 +12,7 @@ export function UserProfile() {
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    // Handle profile update
+    //handle profile update, not complete
     console.log("Profile updated:", { username, email })
   }
 

@@ -5,6 +5,9 @@ import AccordionDetails from "@mui/material/AccordionDetails"
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore"
 import Box from "@mui/material/Box"
 
+
+// todo, make this in
+
 export function FAQ() {
   return (
     <Box sx={{ maxWidth: "48rem", mx: "auto", my: 2 }}>
@@ -29,7 +32,7 @@ export function FAQ() {
           <Typography>The chatbot uses advanced language models to understand and respond to your queries.</Typography>
         </AccordionDetails>
       </Accordion>
-      {/* Add more FAQ items as needed */}
+      {/* add more faq as needed */}
     </Box>
   )
 }

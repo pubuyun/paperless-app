@@ -11,7 +11,7 @@ export function Feedback() {
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    // Handle feedback submission
+    // handle feedback subsmission, not complete
     console.log("Feedback submitted:", feedback)
     setFeedback("")
   }

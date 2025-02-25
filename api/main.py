@@ -1,11 +1,14 @@
 from openai import OpenAI
+from fastapi import FastAPI, Request
+from fastapi.responses import StreamingResponse
+from fastapi.middleware.cors import CORSMiddleware
 
 from datetime import datetime
 import os
 
 # this will be the AQA english analysis and feedback testing agent
 # oxford AQA iGCSE English Literature
-# Grade essays with deatiled feedback for AQA iGCSE
+# estimate grades for essays with detailed, useful feedback for AQA iGCSE
 def getApiKey():
     """
     gets api key from apiKey.config, starts with main:
@@ -72,13 +75,13 @@ def clearMdFile(filepath):
             with open(filepath, 'r', encoding='utf-8') as file:
                 content = file.read()
                 if content.strip():
-                    # Create backup with timestamp
+                    # create backup with timestamp
                     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
                     backup_path = f"{filepath[:-3]}_{timestamp}.md"
                     with open(backup_path, 'w', encoding='utf-8') as backup:
                         backup.write(content)
                         print(f"Backup created: {backup_path}")
-        # Clear original file
+        # clear file
         with open(filepath, 'w', encoding='utf-8') as file:
             file.write('')
             print(f"File cleared: {filepath}")
@@ -129,7 +132,7 @@ def getCompletion(model, prompt, system_prompt, output_path):
         response = client.chat.completions.create(
             model=model,
             messages=[
-                {"role": "system", "content": system_prompt}, #develoepr role for some other modedls, 4omini only sys
+                {"role": "system", "content": system_prompt}, #develoepr role for some other models, 4omini only sys
                 {"role": "user", "content": prompt}
             ],
             #tools=tools,
@@ -142,6 +145,67 @@ def getCompletion(model, prompt, system_prompt, output_path):
     except Exception as e:
         print(f"Error: {e}")
 
+
+
+app = FastAPI()
+# add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  ############## In production, replace with the frontend URL##############
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+@app.post("/")
+async def chat_endpoint(request: Request):
+    data = await request.json()
+    messages = data.get("messages", [])
+    
+    valid_models = ["gpt-4o", "gpt-4o-mini", "deepseek-reasoner"] # moodels we allow, for backend checking
+    model = data.get("model") #get the model from request
+    
+    print("\n=== Request Details ===")
+    print(f"Raw data received: {data}")
+    print(f"Model from request: {model}")
+    
+    # model validation
+    if model not in valid_models:
+        print(f"Invalid model: '{model}', falling back to gpt-4o-mini")
+        model = "gpt-4o-mini"
+    else:
+        print(f"Using model: {model}")
+    
+    # print("\n=== Conversation History ===")
+    # for msg in messages:
+    #     role = msg["role"].upper()
+    #     content = msg["content"]
+    #     print(f"\n{role}: {content}")
+    # print("\n=== Assistant Response ===")
+    
+    client = OpenAI(api_key=getApiKey(), base_url=getBaseUrl())
+    async def generate():
+        try:
+            response = client.chat.completions.create(
+                model=model,
+                messages=messages,
+                stream=True,
+            )
+            
+            # full_response = ""
+            for chunk in response:
+                if chunk.choices and chunk.choices[0].delta.content:
+                    content = chunk.choices[0].delta.content
+                    # full_response += content
+                    yield f"data: {content}\n\n"
+
+        except Exception as e:
+            error_msg = f"Error: {str(e)}"
+            print(f"\n{error_msg}\n")
+            yield f"data: {error_msg}\n\n"
+            
+    return StreamingResponse(generate(), media_type="text/event-stream")
+
 def main():
     inputFilePath = "input.md"
     outputFilePath = "output.md"
@@ -151,8 +215,11 @@ def main():
     metaPrompt = readMdFile("prompts/metaPrompt.md")
     
     generatePrompt = False
-    generatePromptPreText = ""
+    generatePromptPreText = """
+    
+                            """
     userPrompting = True
+    
     # you should always use R1 for generating prompts that require good formatting and examples ex.marking/giving feedback.
     # you should use 4omini for generating prompts that are more general and you need to follow the constraints
     # answers you can  ask both then combine or let user choose one
@@ -165,8 +232,6 @@ def main():
         clearMdFile(outputFilePath)
         getCompletion("deepseek-reasoner", userPrompt, readMdFile(promptOutputFilePath), outputFilePath)
 
-
-
-
-if __name__=="__main__":
-    main()
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8000)
