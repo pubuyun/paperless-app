@@ -162,7 +162,21 @@ async def chat_endpoint(request: Request):
     data = await request.json()
     messages = data.get("messages", [])
     
-    valid_models = ["gpt-4o", "gpt-4o-mini", "deepseek-reasoner"] # moodels we allow, for backend checking
+
+    # moodels we allow, for backend checking
+    # added custom models and distilled ones later
+    valid_models = [
+                    "gpt-4o", # openais flagship model, expensive
+                    "gpt-4o-mini", # like 4o but faster, cheap and efficient can offer for free
+                    "o3-mini", # cheaper than 4o, a small fast, super smart reasoning model
+                    "deepseek-reasoner", # industtry breaking cheap and effective reasoning model
+                    "deepseek-chat", # deepseek's direct prediction model
+                    "claude-3-5-sonnet-20241022", # smart model for complex problems
+                    "gemini-2.0-flash", # google's flagship fast model
+                    "qwen2.5-32b-instruct", # opensource model from china, alibaba
+                    "Doubao-pro-128k", # erm what the
+                    "llama3.3-70b-instruct", # industry-leading speed in open source model
+                    ] 
     model = data.get("model") #get the model from request
     
     print("\n=== Request Details ===")
