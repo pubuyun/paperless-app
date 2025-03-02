@@ -1,3 +1,4 @@
 {
-    "cline.vsCodeLmModelSelector": {}
+    "cline.vsCodeLmModelSelector": {},
+    "kdb.connectionMap": {}
 }

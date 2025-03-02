@@ -14,12 +14,15 @@ import { ModelSelector } from "@/components/model-selector";
 import { FAQ } from "@/components/faq";
 import { Feedback } from "@/components/feedback";
 import { UserProfile } from "@/components/user-profile";
-import ReactMarkdown from "react-markdown"; //do this later, make sure it renders fast
-import remarkGfm from "remark-gfm";
-import { request } from "http";
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
+import remarkMath from 'remark-math'
+import rehypeKatex from 'rehype-katex'
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
+import * as prismStyles from 'react-syntax-highlighter/dist/esm/styles/prism'
 
-
-//todo: dont allow empty messages
+//todo:
+// make it look better
 // dont allow sending another while other message from the same chatbox is processing, backend or here?idk
 // make hover part display below the metadata stuff not on top of message
 // network and process receive stuff faster look at other
@@ -52,6 +55,7 @@ export default function ChatPage() {
   const [mode, setMode] = useState<"light" | "dark">("light");
 
   const [selectedModel, setSelectedModel] = useState("gpt-4o-mini"); // default starting model
+  const [isProcessing, setIsProcessing] = useState(false);  // chat is processing
 
   const toggleTheme = () => {
     setMode((prevMode) => (prevMode === "light" ? "dark" : "light"));
@@ -81,8 +85,9 @@ export default function ChatPage() {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!input.trim()) return;
+    if (!input.trim() || isProcessing) return;  // Add isProcessing check
 
+    setIsProcessing(true);  // Set processing state
     const userMessage: Message = {
       id: Date.now(),
       role: "user",
@@ -136,7 +141,14 @@ export default function ChatPage() {
         const lines = chunk.split("\n");
         const contentLines = lines
           .filter((line) => line.startsWith("data: "))
-          .map((line) => line.slice(6));
+          .map((line) => {
+            try {
+              // parse json encoded data
+              return JSON.parse(line.slice(6));
+            } catch {
+              return line.slice(6);
+            }
+          });
 
         assistantMessage += contentLines.join("");
         setMessages((prevMessages) => {
@@ -158,6 +170,7 @@ export default function ChatPage() {
       ]);
     } finally {
       setIsTyping(false);
+      setIsProcessing(false);
     }
   };
 
@@ -212,7 +225,29 @@ export default function ChatPage() {
                   {message.role === "user" ? (
                     message.content
                   ) : (
-                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                    <ReactMarkdown
+                      remarkPlugins={[remarkGfm, remarkMath]}
+                      rehypePlugins={[rehypeKatex as any]}
+                      components={{
+                        code({node, inline, className, children, ...props}) {
+                          const match = /language-(\w+)/.exec(className || '')
+                          return !inline && match ? (
+                            <SyntaxHighlighter
+                              style={prismStyles.vscDarkPlus as any}
+                              language={match[1]}
+                              PreTag="div"
+                              {...props}
+                            >
+                              {String(children).replace(/\n$/, '')}
+                            </SyntaxHighlighter>
+                          ) : (
+                            <code className={className} {...props}>
+                              {children}
+                            </code>
+                          )
+                        }
+                      }}
+                    >
                       {message.content}
                     </ReactMarkdown>
                   )}
@@ -299,24 +334,32 @@ export default function ChatPage() {
                 <ModelSelector
                   onChange={handleModelChange}
                   value={selectedModel}
+                  //disabled={isProcessing}
                 />
                 <TextField
                   fullWidth
                   value={input}
                   onChange={handleInputChange}
-                  placeholder="Type your message..."
+                  placeholder="Type your message here..."
                   variant="outlined"
+                  autoComplete="off"
+                  //disabled={isProcessing}
                   sx={{ flexGrow: 1 }}
                 />
-                <Button variant="outlined" startIcon={<AttachFileIcon />}>
-                  Attach
+                <Button 
+                  variant="outlined" 
+                  startIcon={<AttachFileIcon />}
+                  //disabled={isProcessing}
+                >
+                  {/* Attach */}
                 </Button>
                 <Button
                   type="submit"
                   variant="contained"
                   endIcon={<SendIcon />}
+                  disabled={isProcessing || !input.trim()}
                 >
-                  Send
+                  {/* Send */}
                 </Button>
               </Box>
             </form>

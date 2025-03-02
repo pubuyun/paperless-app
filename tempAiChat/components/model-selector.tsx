@@ -24,10 +24,6 @@ const models = [
     label: "o3-mini",
   },
   {
-    value: "o3-mini",
-    label: "o3-mini",
-  },
-  {
     value: "deepseek-chat",
     label: "Deepseek V3",
   },
