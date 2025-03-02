@@ -8,66 +8,30 @@ import TextField from "@mui/material/TextField";
 import Button from "@mui/material/Button";
 import SendIcon from "@mui/icons-material/Send";
 import AttachFileIcon from "@mui/icons-material/AttachFile";
-import ContentCopyIcon from "@mui/icons-material/ContentCopy";
+
 import { Sidebar } from "@/components/sidebar";
 import { ModelSelector } from "@/components/model-selector";
 import { FAQ } from "@/components/faq";
 import { Feedback } from "@/components/feedback";
 import { UserProfile } from "@/components/user-profile";
-import ReactMarkdown from 'react-markdown'
-import remarkGfm from 'remark-gfm'
-import remarkMath from 'remark-math'
-import rehypeKatex from 'rehype-katex'
-import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
-import * as prismStyles from 'react-syntax-highlighter/dist/esm/styles/prism'
-
-//todo:
-// make it look better
-// dont allow sending another while other message from the same chatbox is processing, backend or here?idk
-// make hover part display below the metadata stuff not on top of message
-// network and process receive stuff faster look at other
-
-interface Message {
-  id: number;
-  role: "user" | "assistant";
-  content: string;
-  model?: string;
-}
-
-// preset convos for later faq section
-//ermemrermermermemrermermermer
-const randomConversation = [
-  // { id: 1, role: "user", content: "Hi mom" },
-  // {
-  //   id: 2,
-  //   role: "assistant",
-  //   content: "qwerty",
-  //   model: "GPT-3.5",
-  // },
-];
+import { MessageView } from "@/components/message-view";
+import { Message } from "@/types/message";
 
 export default function ChatPage() {
-  const [messages, setMessages] = useState<Message[]>([]); //useState(randomConversation)
+  const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [currentView, setCurrentView] = useState("chat");
   const [mode, setMode] = useState<"light" | "dark">("light");
-
-  const [selectedModel, setSelectedModel] = useState("gpt-4o-mini"); // default starting model
-  const [isProcessing, setIsProcessing] = useState(false);  // chat is processing
-
-  const toggleTheme = () => {
-    setMode((prevMode) => (prevMode === "light" ? "dark" : "light"));
-  };
+  const [selectedModel, setSelectedModel] = useState("gpt-4o-mini");
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const currentTheme = React.useMemo(
     () =>
       createTheme({
         palette: {
-          primary: {
-            main: "#2acbb6",
-          },
+          primary: { main: "#2acbb6" },
           mode,
         },
       }),
@@ -85,9 +49,9 @@ export default function ChatPage() {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!input.trim() || isProcessing) return;  // Add isProcessing check
+    if (!input.trim() || isProcessing) return;
 
-    setIsProcessing(true);  // Set processing state
+    setIsProcessing(true); //set processing
     const userMessage: Message = {
       id: Date.now(),
       role: "user",
@@ -104,7 +68,7 @@ export default function ChatPage() {
           role,
           content,
         })),
-        model: selectedModel, //check this
+        model: selectedModel,
       };
 
       const response = await fetch("/api/chat", {
@@ -112,7 +76,7 @@ export default function ChatPage() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(requestBody), // check this 
+        body: JSON.stringify(requestBody),
       });
 
       if (!response.ok) throw new Error("Failed to fetch response");
@@ -174,148 +138,27 @@ export default function ChatPage() {
     }
   };
 
-  const toggleSidebar = () => {
-    setIsSidebarOpen(!isSidebarOpen);
-  };
-
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
-  };
-
-  const renderContent = () => {
-    switch (currentView) {
-      case "faq":
-        return <FAQ />;
-      case "feedback":
-        return <Feedback />;
-      case "profile":
-        return <UserProfile />;
-      default:
-        return (
-          <Box sx={{ maxWidth: "48rem", mx: "auto", my: 2 }}>
-            {messages.map((message) => (
-              <Box
-                key={message.id}
-                sx={{
-                  display: "flex",
-                  justifyContent:
-                    message.role === "user" ? "flex-end" : "flex-start",
-                  mb: 2,
-                }}
-              >
-                <Box
-                  sx={{
-                    position: "relative",
-                    maxWidth: "75%",
-                    p: 2,
-                    borderRadius: 2,
-                    bgcolor:
-                      message.role === "user"
-                        ? "primary.main"
-                        : "background.paper",
-                    color:
-                      message.role === "user"
-                        ? "primary.contrastText"
-                        : "text.primary",
-                    "&:hover .message-footer": {
-                      opacity: 1,
-                    },
-                  }}
-                >
-                  {message.role === "user" ? (
-                    message.content
-                  ) : (
-                    <ReactMarkdown
-                      remarkPlugins={[remarkGfm, remarkMath]}
-                      rehypePlugins={[rehypeKatex as any]}
-                      components={{
-                        code({node, inline, className, children, ...props}) {
-                          const match = /language-(\w+)/.exec(className || '')
-                          return !inline && match ? (
-                            <SyntaxHighlighter
-                              style={prismStyles.vscDarkPlus as any}
-                              language={match[1]}
-                              PreTag="div"
-                              {...props}
-                            >
-                              {String(children).replace(/\n$/, '')}
-                            </SyntaxHighlighter>
-                          ) : (
-                            <code className={className} {...props}>
-                              {children}
-                            </code>
-                          )
-                        }
-                      }}
-                    >
-                      {message.content}
-                    </ReactMarkdown>
-                  )}
-                  {message.role === "assistant" && (
-                    <Box
-                      className="message-footer"
-                      sx={{
-                        position: "absolute",
-                        bottom: 0,
-                        left: 0,
-                        right: 0,
-                        p: 1,
-                        bgcolor: "background.paper",
-                        borderBottomLeftRadius: 8,
-                        borderBottomRightRadius: 8,
-                        opacity: 0,
-                        transition: "opacity 0.3s",
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                      }}
-                    >
-                      <Box
-                        sx={{ typography: "caption", color: "text.secondary" }}
-                      >
-                        Generated with {message.model}
-                      </Box>
-                      <Button
-                        size="small"
-                        startIcon={<ContentCopyIcon />}
-                        onClick={() => copyToClipboard(message.content)}
-                      >
-                        Copy
-                      </Button>  
-                    </Box>
-                  )}
-                </Box>
-              </Box>
-            ))}
-            {isTyping && (
-              <Box
-                sx={{ display: "flex", justifyContent: "flex-start", mb: 2 }}
-              >
-                <Box
-                  sx={{ p: 2, borderRadius: 2, bgcolor: "background.paper" }}
-                >
-                  ...
-                </Box>
-              </Box>
-            )}
-          </Box>
-        );
-    }
-  };
-
   return (
     <ThemeProvider theme={currentTheme}>
       <CssBaseline />
       <Box sx={{ display: "flex", height: "100vh" }}>
         <Sidebar
           isOpen={isSidebarOpen}
-          toggleSidebar={toggleSidebar}
+          toggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
           setCurrentView={setCurrentView}
-          toggleTheme={toggleTheme}
+          toggleTheme={() => setMode(mode === "light" ? "dark" : "light")}
         />
         <Box sx={{ flexGrow: 1, display: "flex", flexDirection: "column" }}>
           <Box component="main" sx={{ flexGrow: 1, overflow: "auto", p: 3 }}>
-            {renderContent()}
+            {currentView === "chat" ? (
+              <MessageView messages={messages} isTyping={isTyping} />
+            ) : currentView === "faq" ? (
+              <FAQ />
+            ) : currentView === "feedback" ? (
+              <Feedback />
+            ) : currentView === "profile" ? (
+              <UserProfile />
+            ) : null}
           </Box>
           <Box
             component="footer"
@@ -334,7 +177,6 @@ export default function ChatPage() {
                 <ModelSelector
                   onChange={handleModelChange}
                   value={selectedModel}
-                  //disabled={isProcessing}
                 />
                 <TextField
                   fullWidth
@@ -343,24 +185,15 @@ export default function ChatPage() {
                   placeholder="Type your message here..."
                   variant="outlined"
                   autoComplete="off"
-                  //disabled={isProcessing}
                   sx={{ flexGrow: 1 }}
                 />
-                <Button 
-                  variant="outlined" 
-                  startIcon={<AttachFileIcon />}
-                  //disabled={isProcessing}
-                >
-                  {/* Attach */}
-                </Button>
+                <Button variant="outlined" startIcon={<AttachFileIcon />} />
                 <Button
                   type="submit"
                   variant="contained"
                   endIcon={<SendIcon />}
                   disabled={isProcessing || !input.trim()}
-                >
-                  {/* Send */}
-                </Button>
+                />
               </Box>
             </form>
           </Box>
