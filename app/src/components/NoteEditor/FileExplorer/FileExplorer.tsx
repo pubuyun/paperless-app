@@ -5,6 +5,8 @@ import { styled, alpha } from '@mui/material/styles';
 import Box from '@mui/material/Box';
 import Collapse from '@mui/material/Collapse';
 import Typography from '@mui/material/Typography';
+import Menu from '@mui/material/Menu';
+import MenuItem from '@mui/material/MenuItem';
 import { RichTreeView } from '@mui/x-tree-view/RichTreeView';
 import { treeItemClasses } from '@mui/x-tree-view/TreeItem';
 import { useTreeItem2 } from '@mui/x-tree-view/useTreeItem2';
@@ -29,8 +31,8 @@ import ImageIcon from '@mui/icons-material/Image';
 import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 import VideoCameraBackIcon from '@mui/icons-material/VideoCameraBack';
 // -----------------------
-import { FileType, FileItem } from './types';
-import { loadDirectoryContents, createFile, createDirectory, deleteItem, sortItems, isExpandable } from './loadFiles';
+import { FileType, FileItem } from '../types';
+import { loadDirectoryContents, createFile, createDirectory, deleteItem, sortItems, isExpandable, determineFileType } from './loadFiles';
 
 interface CustomLabelProps {
   icon?: SvgIconComponent;
@@ -281,36 +283,63 @@ export default function MultiSelectFileExplorer({
     items,
     setItems,
   }: MultiSelectFileExplorerProps) {
-  const [selectedItems, setSelectedItems] = React.useState<string[]>([]);
+const [selectedItems, setSelectedItems] = React.useState<string[]>([]);
+const [contextMenu, setContextMenu] = React.useState<{
+  mouseX: number;
+  mouseY: number;
+} | null>(null);
 
-  const handleContextMenu = async (event: React.MouseEvent) => {
-    event.preventDefault();
-    window.IpcApi.send('show-context-menu');
-  };
 
-  const getFileType = (fileName: string): FileType => {
-    const ext = fileName.split('.').pop()?.toLowerCase();
-    switch (ext) {
-      case 'jpg':
-      case 'jpeg':
-      case 'png':
-      case 'gif':
-        return 'image';
-      case 'pdf':
-        return 'pdf';
-      case 'doc':
-      case 'docx':
-      case 'txt':
-      case 'md':
-        return 'doc';
-      case 'mp4':
-      case 'mov':
-      case 'avi':
-        return 'video';
-      default:
-        return 'doc';
-    }
-  };
+const handleClose = () => {
+  setContextMenu(null);
+};
+
+const handleOpenFolderClick = async () => {
+  const result = await window.FileApi.showOpenDialog({
+    properties: ['openDirectory']
+  });
+  handleClose();
+  void handleOpenFolder(result);
+};
+
+const handleNewFileClick = async () => {
+  const result = await window.FileApi.showSaveDialog({
+    title: 'Create New File',
+    buttonLabel: 'Create'
+  });
+  handleClose();
+  if (!result.canceled && result.filePath) {
+    void handleNewFile(result);
+  }
+};
+
+const handleNewFolderClick = async () => {
+  const result = await window.FileApi.showSaveDialog({
+    title: 'Create New Folder',
+    buttonLabel: 'Create'
+  });
+  handleClose();
+  if (!result.canceled && result.filePath) {
+    void handleNewFolder(result);
+  }
+};
+
+const handleDeleteClick = async () => {
+  if (selectedItems.length > 0) {
+    const result = await window.FileApi.showMessageBox({
+      type: 'question',
+      title: 'Confirm Delete',
+      message: 'Are you sure you want to delete the selected items?',
+      buttons: ['Yes', 'No'],
+      defaultId: 1,
+      cancelId: 1
+    });
+    handleClose();
+    void handleDeleteOperation(result);
+  }
+};
+
+
 
   const updateItemsRecursively = (items: FileItem[], parentPath: string, newFile: FileItem): FileItem[] => {
     return items.map(item => {
@@ -352,7 +381,7 @@ export default function MultiSelectFileExplorer({
       const newFile:FileItem = {
         id: dialogResult.filePath,
         label: fileName,
-        fileType: getFileType(fileName)
+        fileType: await determineFileType(fileName, false)
       };
       setItems(prevItems => {
         const newItems = updateItemsRecursively(prevItems, parentPath, newFile);
@@ -370,7 +399,7 @@ export default function MultiSelectFileExplorer({
       const newFolder:FileItem = {
         id: dialogResult.filePath,
         label: folderName,
-        fileType: 'folder' as const,
+        fileType: 'folder',
         children: []
       };
 
@@ -455,7 +484,24 @@ export default function MultiSelectFileExplorer({
   };
 // ------------- end logic ----------------
   return (
-    <Box onContextMenu={handleContextMenu} className="file-explorer" sx={{ maxHeight: 'calc(100vh - 64px)', overflowY: 'scroll', scrollbarWidth: 'none' }}>
+    <Box className="file-explorer" sx={{ maxHeight: 'calc(100vh - 64px)', overflowY: 'scroll', scrollbarWidth: 'none' }}>
+      <Menu
+        open={contextMenu !== null}
+        onClose={handleClose}
+        anchorReference="anchorPosition"
+        anchorPosition={
+          contextMenu !== null
+            ? { top: contextMenu.mouseY, left: contextMenu.mouseX }
+            : undefined
+        }
+      >
+        <MenuItem onClick={handleOpenFolderClick}>Open Folder</MenuItem>
+        <MenuItem onClick={handleNewFileClick}>New File</MenuItem>
+        <MenuItem onClick={handleNewFolderClick}>New Folder</MenuItem>
+        {selectedItems.length > 0 && (
+          <MenuItem onClick={handleDeleteClick}>Delete</MenuItem>
+        )}
+      </Menu>
       <RichTreeView
         items={items}
         expandedItems={defaultExpandedItems}

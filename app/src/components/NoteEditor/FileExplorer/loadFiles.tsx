@@ -271,7 +271,7 @@ export async function copyItem(src: string, dest: string): Promise<FileItem> {
   };
 }
 
-async function determineFileType(filename: string, isDirectory: boolean): Promise<FileType> {
+export async function determineFileType(filename: string, isDirectory: boolean): Promise<FileType> {
   if (isDirectory) return 'folder';
   
   const name = await pathBasename(filename);

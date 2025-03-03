@@ -112,11 +112,6 @@ app.on('ready', () => {
   ipcMain.handle('clearStore', async () => await store.clear())
   ipcMain.handle('storeHas', async (_, key) => await store.has(key))
   ipcMain.handle('mainsend', async (_, channel, ...args) => await win?.webContents.send(channel, ...args))
-  // Context menu handler
-  ipcMain.on('show-context-menu', () => {
-    const menu = Menu.buildFromTemplate(MenuTemplate);
-    menu.popup({ window: win });
-  });
   // Dialog handlers
   ipcMain.handle('showOpenDialog', async (_, options) => {
     return await dialog.showOpenDialog(win!, options)

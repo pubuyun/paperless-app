@@ -11894,10 +11894,6 @@ app$2.on("ready", () => {
   ipcMain$1.handle("clearStore", async () => await store.clear());
   ipcMain$1.handle("storeHas", async (_, key) => await store.has(key));
   ipcMain$1.handle("mainsend", async (_, channel, ...args) => await (win == null ? void 0 : win.webContents.send(channel, ...args)));
-  ipcMain$1.on("show-context-menu", () => {
-    const menu2 = Menu.buildFromTemplate(MenuTemplate);
-    menu2.popup({ window: win });
-  });
   ipcMain$1.handle("showOpenDialog", async (_, options) => {
     return await dialog.showOpenDialog(win, options);
   });
