@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef, useCallback } from "react";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import CssBaseline from "@mui/material/CssBaseline";
 import Box from "@mui/material/Box";
@@ -26,6 +26,7 @@ export default function ChatPage() {
   const [mode, setMode] = useState<"light" | "dark">("light");
   const [selectedModel, setSelectedModel] = useState("gpt-4o-mini");
   const [isProcessing, setIsProcessing] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null); //auto select/focus textbox
 
   const currentTheme = React.useMemo(
     () =>
@@ -42,10 +43,10 @@ export default function ChatPage() {
     setInput(e.target.value);
   };
 
-  const handleModelChange = (model: string) => {
+  const handleModelChange = useCallback((model: string) => {
     console.log("Model changed to:", model); // debugging
     setSelectedModel(model);
-  };
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -61,6 +62,7 @@ export default function ChatPage() {
     setIsTyping(true);
     setMessages((prevMessages) => [...prevMessages, userMessage]);
     setInput("");
+    inputRef.current?.focus(); //focus to textbox
 
     try {
       const requestBody = {
@@ -179,6 +181,7 @@ export default function ChatPage() {
                   value={selectedModel}
                 />
                 <TextField
+                  inputRef={inputRef}
                   fullWidth
                   value={input}
                   onChange={handleInputChange}

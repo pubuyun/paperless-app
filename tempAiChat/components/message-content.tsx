@@ -2,8 +2,6 @@ import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import remarkMath from 'remark-math'
 import rehypeKatex from 'rehype-katex'
-import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter'
-import * as prismStyles from 'react-syntax-highlighter/dist/esm/styles/prism'
 import { Message } from '@/types/message'
 
 export const MessageContent = ({ message }: { message: Message }) => (
@@ -12,22 +10,26 @@ export const MessageContent = ({ message }: { message: Message }) => (
       remarkPlugins={[remarkGfm, remarkMath]}
       rehypePlugins={[rehypeKatex as any]}
       components={{
-        code({node, inline, className, children, ...props}) {
+        code({ node, inline, className, children, ...props }) {
+          if (!children) return null; // Add null check
+          
           const match = /language-(\w+)/.exec(className || '')
-          return !inline && match ? (
-            <SyntaxHighlighter
-              style={prismStyles.vscDarkPlus as any}
-              language={match[1]}
-              PreTag="div"
-              {...props}
-            >
-              {String(children).replace(/\n$/, '')}
-            </SyntaxHighlighter>
-          ) : (
-            <code className={className} {...props}>
-              {children}
-            </code>
-          )
+          
+          if (inline) {
+            return (
+              <code className="bg-gray-200 rounded-sm px-1" {...props}>
+                {String(children).replace(/\n$/, '')}
+              </code>
+            );
+          }
+
+          return (
+            <pre className="rounded-md bg-gray-800 p-4">
+              <code className={`${className} ${match ? `language-${match[1]}` : ''}`} {...props}>
+                {String(children).replace(/\n$/, '')}
+              </code>
+            </pre>
+          );
         }
       }}
     >
