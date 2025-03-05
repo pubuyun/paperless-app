@@ -7,6 +7,7 @@ from datetime import datetime
 import os
 import json
 
+
 # this will be the AQA english analysis and feedback testing agent
 # oxford AQA iGCSE English Literature
 # estimate grades for essays with detailed, useful feedback for AQA iGCSE
@@ -14,37 +15,51 @@ def getApiKey():
     """
     gets api key from apiKey.config, starts with main:
     """
-    with open("./apiKey.config") as f:
-        api_key = next((line[5:].strip() for line in f.readlines() if line.startswith("main:")), None)
+    with open("api/apiKey.config") as f:
+        api_key = next(
+            (line[5:].strip() for line in f.readlines() if line.startswith("main:")),
+            None,
+        )
         if api_key is None:
             raise ValueError("API key not found in apiKey.config")
         return api_key
+
+
 def getBaseUrl():
     """
     gets base url from apiKey.config, starts with base-url:
     """
-    with open("./apiKey.config") as f:
-        baseUrl = next((line[9:].strip() for line in f.readlines() if line.startswith("base-url:")), None)
+    with open("api/apiKey.config") as f:
+        baseUrl = next(
+            (
+                line[9:].strip()
+                for line in f.readlines()
+                if line.startswith("base-url:")
+            ),
+            None,
+        )
         if baseUrl is None:
             raise ValueError("baseUrl not found in apiKey.config")
         return baseUrl
 
+
 def readMdFile(filepath):
     """
     Read a markdown file
-    
-    Args:  
+
+    Args:
         filepath: Path to markdown file to read
-    Returns:          
+    Returns:
         str: Content of the file
     """
     try:
-        with open(filepath, 'r', encoding='utf-8') as file:
+        with open(filepath, "r", encoding="utf-8") as file:
             print(f"File read successfully: {filepath}")
             return file.read()
     except FileNotFoundError:
         print(f"File not found: {filepath}")
         return None
+
 
 def writeMdFile(filepath, content):
     """
@@ -52,16 +67,17 @@ def writeMdFile(filepath, content):
     Args:
         filepath: Path to markdown file
         content: Content to append
-    Returns:   
+    Returns:
         bool: True if content was written successfully, False otherwise
     """
     try:
-        with open(filepath, 'a', encoding='utf-8') as file:
+        with open(filepath, "a", encoding="utf-8") as file:
             file.write(content)
         return True
     except Exception as e:
         print(f"Error writing to file: {e}")
         return False
+
 
 def clearMdFile(filepath):
     """
@@ -73,18 +89,18 @@ def clearMdFile(filepath):
     """
     try:
         if os.path.exists(filepath):
-            with open(filepath, 'r', encoding='utf-8') as file:
+            with open(filepath, "r", encoding="utf-8") as file:
                 content = file.read()
                 if content.strip():
                     # create backup with timestamp
-                    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+                    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
                     backup_path = f"{filepath[:-3]}_{timestamp}.md"
-                    with open(backup_path, 'w', encoding='utf-8') as backup:
+                    with open(backup_path, "w", encoding="utf-8") as backup:
                         backup.write(content)
                         print(f"Backup created: {backup_path}")
         # clear file
-        with open(filepath, 'w', encoding='utf-8') as file:
-            file.write('')
+        with open(filepath, "w", encoding="utf-8") as file:
+            file.write("")
             print(f"File cleared: {filepath}")
         return True
     except Exception as e:
@@ -92,7 +108,7 @@ def clearMdFile(filepath):
         return False
 
 
-#deepseek-reasoner, gpt-4o or gpt-4o-mini
+# deepseek-reasoner, gpt-4o or gpt-4o-mini
 def getCompletion(model, prompt, system_prompt, output_path):
     """
     Get completion from OpenAI API
@@ -120,12 +136,12 @@ def getCompletion(model, prompt, system_prompt, output_path):
     #                         "description": "The city and state, e.g. San Francisco, CA",
     #                     },
     #                     "unit": {
-    #                         "type": "string", 
+    #                         "type": "string",
     #                         "enum": ["celsius", "fahrenheit"]},
     #                 },
     #                 "required": ["location"],
     #             },
-    #         },   
+    #         },
     #     }
     # ]
 
@@ -133,10 +149,13 @@ def getCompletion(model, prompt, system_prompt, output_path):
         response = client.chat.completions.create(
             model=model,
             messages=[
-                {"role": "system", "content": system_prompt}, #develoepr role for some other models, 4omini only sys
-                {"role": "user", "content": prompt}
+                {
+                    "role": "system",
+                    "content": system_prompt,
+                },  # develoepr role for some other models, 4omini only sys
+                {"role": "user", "content": prompt},
             ],
-            #tools=tools,
+            # tools=tools,
             stream=True,
         )
         for chunk in response:
@@ -147,58 +166,60 @@ def getCompletion(model, prompt, system_prompt, output_path):
         print(f"Error: {e}")
 
 
-
 app = FastAPI()
 # add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  ############## In production, replace with the frontend URL##############
+    allow_origins=[
+        "*"
+    ],  ############## In production, replace with the frontend URL##############
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
+
 @app.post("/")
 async def chat_endpoint(request: Request):
     data = await request.json()
     messages = data.get("messages", [])
-    
 
     # moodels we allow, for backend checking
     # added custom models and distilled ones later
     valid_models = [
-                    "gpt-4o", # openais flagship model, expensive
-                    "gpt-4o-mini", # like 4o but faster, cheap and efficient can offer for free
-                    "o3-mini", # cheaper than 4o, a small fast, super smart reasoning model
-                    "deepseek-reasoner", # industtry breaking cheap and effective reasoning model
-                    "deepseek-chat", # deepseek's direct prediction model
-                    "claude-3-5-sonnet-20241022", # smart model for complex problems
-                    "gemini-2.0-flash", # google's flagship fast model
-                    "qwen2.5-32b-instruct", # opensource model from china, alibaba
-                    "Doubao-pro-128k", # erm what the
-                    "llama3.3-70b-instruct", # industry-leading speed in open source model
-                    ] 
-    model = data.get("model") #get the model from request
-    
+        "gpt-4o",  # openais flagship model, expensive
+        "gpt-4o-mini",  # like 4o but faster, cheap and efficient can offer for free
+        "o3-mini",  # cheaper than 4o, a small fast, super smart reasoning model
+        "deepseek-reasoner",  # industtry breaking cheap and effective reasoning model
+        "deepseek-chat",  # deepseek's direct prediction model
+        "claude-3-5-sonnet-20241022",  # smart model for complex problems
+        "gemini-2.0-flash",  # google's flagship fast model
+        "qwen2.5-32b-instruct",  # opensource model from china, alibaba
+        "Doubao-pro-128k",  # erm what the
+        "llama3.3-70b-instruct",  # industry-leading speed in open source model
+    ]
+    model = data.get("model")  # get the model from request
+
     print("\n=== Request Details ===")
     print(f"Raw data received: {data}")
     print(f"Model from request: {model}")
-    
+
     # model validation
     if model not in valid_models:
         print(f"Invalid model: '{model}', falling back to gpt-4o-mini")
         model = "gpt-4o-mini"
     else:
         print(f"Using model: {model}")
-    
+
     # print("\n=== Conversation History ===")
     # for msg in messages:
     #     role = msg["role"].upper()
     #     content = msg["content"]
     #     print(f"\n{role}: {content}")
     # print("\n=== Assistant Response ===")
-    
+
     client = OpenAI(api_key=getApiKey(), base_url=getBaseUrl())
+
     async def generate():
         try:
             response = client.chat.completions.create(
@@ -206,24 +227,24 @@ async def chat_endpoint(request: Request):
                 messages=messages,
                 stream=True,
             )
-            
+
             # full_response = ""
             for chunk in response:
                 if chunk.choices and chunk.choices[0].delta.content:
                     content = chunk.choices[0].delta.content
                     # full_response += content
                     # yield f"data: {content}\n\n"
-                    
+
                     # hopefully json will encode it and preserve new lines
                     yield f"data: {json.dumps(content)}\n\n\n"
-
 
         except Exception as e:
             error_msg = f"Error: {str(e)}"
             print(f"\n{error_msg}\n")
             yield f"data: {error_msg}\n\n"
-            
+
     return StreamingResponse(generate(), media_type="text/event-stream")
+
 
 def main():
     inputFilePath = "input.md"
@@ -232,7 +253,7 @@ def main():
 
     aqaPrompt = readMdFile("prompts/aqaPrompt.md")
     metaPrompt = readMdFile("prompts/metaPrompt.md")
-    
+
     generatePrompt = False
     generatePromptPreText = """
                             i need help with my gothic story writing, fixing stuff, making stuff better, adding new stuff, making current stuff more effective , and the story more engaging.
@@ -242,20 +263,32 @@ def main():
                             i ened to fix  the storyline, it is a bit messy. then what the character you is doing is not that clear, the mainsoin part can be shorter but more dense. the haunting and abnormal stuff can be clearer
                             """
     userPrompting = False
-    
+
     # you should always use R1 for generating prompts that require good formatting and examples ex.marking/giving feedback.
     # you should use 4omini for generating prompts that are more general and you need to follow the constraints
     # answers you can  ask both then combine or let user choose one
     if generatePrompt:
-        #get generated prompt
+        # get generated prompt
         clearMdFile(promptOutputFilePath)
-        getCompletion("gpt-4o-mini", "new prompt:" + generatePromptPreText,metaPrompt, promptOutputFilePath)
+        getCompletion(
+            "gpt-4o-mini",
+            "new prompt:" + generatePromptPreText,
+            metaPrompt,
+            promptOutputFilePath,
+        )
     if userPrompting:
         userPrompt = readMdFile(inputFilePath)
         clearMdFile(outputFilePath)
-        getCompletion("deepseek-reasoner", userPrompt, readMdFile(promptOutputFilePath), outputFilePath)
+        getCompletion(
+            "deepseek-reasoner",
+            userPrompt,
+            readMdFile(promptOutputFilePath),
+            outputFilePath,
+        )
+
 
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run(app, host="0.0.0.0", port=8000)
     # main()

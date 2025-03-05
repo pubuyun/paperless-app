@@ -1,6 +1,7 @@
 import Box from "@mui/material/Box";
 import Button from "@mui/material/Button";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
+import { Typography } from "@mui/material";
 import { Message as MessageType } from '@/types/message';
 import { MessageContent } from './message-content';
 
@@ -23,7 +24,10 @@ export const Message = ({ message }: { message: MessageType }) => (
         "&:hover .message-footer": { opacity: 1 },
       }}
     >
-      <MessageContent message={message} />
+      {/* <MessageContent message={message} /> */}
+      {/* <Typography variant="body1" sx={{ color: "inherit", lineHeight: 3 }}>
+        {message.content}
+      </Typography> */}
       {message.role === "assistant" && (
         <Box
           className="message-footer"
