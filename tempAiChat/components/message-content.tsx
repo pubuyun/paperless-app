@@ -14,15 +14,15 @@ export const MessageContent = ({ message }: { message: Message }) => (
         code({ node, inline, className, children, ...props }) {
           if (!children) return null; // Add null check
           
-          const match = /language-(\w+)/.exec(className || '')
+    //     //   const match = /language-(\w+)/.exec(className || '')
           
-          if (inline) {
-            return (
-              <code className="bg-gray-200 rounded-sm px-1" {...props}>
-                {String(children).replace(/\n$/, '')}
-              </code>
-            );
-          }
+    //     //   if (inline) {
+    //     //     return (
+    //     //       <code className="bg-gray-200 rounded-sm px-1" {...props}>
+    //     //         {String(children).replace(/\n$/, '')}
+    //     //       </code>
+    //     //     );
+    //     //   }
 
           return (
             <pre className="rounded-md bg-gray-800 p-4">

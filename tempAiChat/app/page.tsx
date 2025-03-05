@@ -106,15 +106,23 @@ export default function ChatPage() {
         const chunk = decoder.decode(value);
         const lines = chunk.split("\n");
         const contentLines = lines
-          .filter((line) => line.startsWith("data: "))
-          .map((line) => {
-            try {
-              // parse json encoded data
-              return JSON.parse(line.slice(6));
-            } catch {
-              return line.slice(6);
-            }
-          });
+          // .filter((line) => line.startsWith("data: "))
+          // .map((line) => {
+          //   try {
+          //     // parse json encoded data
+          //     return JSON.parse(line.slice(6));
+          //   } catch {
+          //     return line.slice(6);
+          //   }
+          // });
+        .map((lines) => {
+          try{
+            return lines+"\n";
+          } catch{
+            console.log("Error displaying");
+            return "erm";
+          }
+        });
 
         assistantMessage += contentLines.join("");
         setMessages((prevMessages) => {

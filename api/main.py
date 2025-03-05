@@ -236,7 +236,9 @@ async def chat_endpoint(request: Request):
                     # yield f"data: {content}\n\n"
 
                     # hopefully json will encode it and preserve new lines
-                    yield f"data: {json.dumps(content)}\n\n\n"
+                    # yield f"data: {json.dumps(content)}\n\n\n"
+                    yield f"{content}"
+                    writeMdFile("debug.md", content)
 
         except Exception as e:
             error_msg = f"Error: {str(e)}"
