@@ -215,7 +215,7 @@ async def chat_endpoint(request: Request):
                     # yield f"data: {content}\n\n"
                     
                     # hopefully json will encode it and preserve new lines
-                    yield f"data: {json.dumps(content)}\n"
+                    yield f"data: {json.dumps(content)}\n\n\n"
 
 
         except Exception as e:
