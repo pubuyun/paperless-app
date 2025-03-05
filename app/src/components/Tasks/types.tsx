@@ -4,6 +4,12 @@ export enum TaskStatus {
     STUCK = 'STUCK',
 }   
 
+export enum StatusColor {
+    NOT_STARTED = 'yellow',
+    IN_PROGRESS = 'blue',
+    STUCK = 'red',
+}
+
 export enum Subject {
     MATH = 'MATH',
     ENGLISH = 'ENGLISH',
@@ -25,7 +31,7 @@ export interface Task {
     status: TaskStatus;
     done: boolean;
     subject: Subject;
-    startDateTime: string;
-    endDateTime: string;
+    startDateTime: Date;
+    endDateTime: Date;
     url: string;
 }

@@ -14,7 +14,7 @@ const App: React.FC = () => {
     loadConfigs().then(setConfigs);
   }, []);
   const [ActivePage, setActivePage] = useState<ComponentType>(() => () => <div>Loading page...</div>);
-  useEffect(() => {setActiveView("NoteEditor");}, []);
+  useEffect(() => {setActiveView("Tasks");}, []);
   useEffect(() => {
     const activeConfig = configs.find(config => config.id === activeView);
     if (activeConfig) {
