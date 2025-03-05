@@ -289,6 +289,28 @@ const [contextMenu, setContextMenu] = React.useState<{
   mouseY: number;
 } | null>(null);
 
+const handleContextMenu = (event: React.MouseEvent) => {
+  event.preventDefault();
+
+  // Find the closest tree item element
+  const treeItem = (event.target as HTMLElement).closest('[role="treeitem"]');
+  if (treeItem) {
+    const itemId = treeItem.getAttribute('data-id');
+    if (itemId && !selectedItems.includes(itemId)) {
+      setSelectedItems([itemId]);
+      onSelectionChange?.([itemId]);
+    }
+  }
+
+  setContextMenu(
+    contextMenu === null
+      ? {
+          mouseX: event.clientX + 2,
+          mouseY: event.clientY - 6,
+        }
+      : null,
+  );
+};
 
 const handleClose = () => {
   setContextMenu(null);
@@ -484,35 +506,38 @@ const handleDeleteClick = async () => {
   };
 // ------------- end logic ----------------
   return (
-    <Box className="file-explorer" sx={{ maxHeight: 'calc(100vh - 64px)', overflowY: 'scroll', scrollbarWidth: 'none' }}>
-      <Menu
-        open={contextMenu !== null}
-        onClose={handleClose}
-        anchorReference="anchorPosition"
-        anchorPosition={
-          contextMenu !== null
-            ? { top: contextMenu.mouseY, left: contextMenu.mouseX }
-            : undefined
-        }
-      >
-        <MenuItem onClick={handleOpenFolderClick}>Open Folder</MenuItem>
-        <MenuItem onClick={handleNewFileClick}>New File</MenuItem>
-        <MenuItem onClick={handleNewFolderClick}>New Folder</MenuItem>
-        {selectedItems.length > 0 && (
-          <MenuItem onClick={handleDeleteClick}>Delete</MenuItem>
-        )}
-      </Menu>
+    <Box 
+      onContextMenu={handleContextMenu}
+      className="file-explorer" 
+      sx={{ maxHeight: 'calc(100vh - 64px)', overflowY: 'scroll', scrollbarWidth: 'none' }}
+    >
+      {contextMenu !== null && (
+        <Menu
+          open={true}
+          onClose={handleClose}
+          anchorReference="anchorPosition"
+          anchorPosition={{ top: contextMenu.mouseY, left: contextMenu.mouseX }}
+        >
+          <MenuItem onClick={handleOpenFolderClick}>Open Folder</MenuItem>
+          <MenuItem onClick={handleNewFileClick}>New File</MenuItem>
+          <MenuItem onClick={handleNewFolderClick}>New Folder</MenuItem>
+          {selectedItems.length > 0 && (
+            <MenuItem onClick={handleDeleteClick}>Delete</MenuItem>
+          )}
+        </Menu>
+      )}
       <RichTreeView
         items={items}
         expandedItems={defaultExpandedItems}
         multiSelect
         isItemEditable={(item)=>item!=items[0]}
-        experimentalFeatures={{ labelEditing: true,  }}
+        experimentalFeatures={{ labelEditing: true }}
         selectedItems={selectedItems}
         onDoubleClick={onDoubleClick ? () => onDoubleClick([selectedItems[0]]) : undefined}
         onSelectedItemsChange={handleSelectionChange}
         onExpandedItemsChange={onExpandedItemsChange}
-        sx={{ 
+        onContextMenu={handleContextMenu}
+        sx={{
           height: 'fit-content', 
           flexGrow: 1, 
           maxWidth: 400, 
