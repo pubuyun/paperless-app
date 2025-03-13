@@ -1,4 +1,4 @@
-import React, { lazy, useState, useEffect, Suspense, ComponentType } from 'react';
+import React, { lazy, useState, useEffect, Suspense, ComponentType, useMemo } from 'react';
 import Sidebar from './components/common/Sidebar';
 import { loadConfigs } from './utils/loader';
 import { ComponentConfig } from './types/config';
@@ -13,19 +13,26 @@ const App: React.FC = () => {
   useEffect(() => {
     loadConfigs().then(setConfigs);
   }, []);
-  const [ActivePage, setActivePage] = useState<ComponentType>(() => () => <div>Loading page...</div>);
+  const [loadedComponents, setLoadedComponents] = useState<{ [key: string]: ComponentType }>({});
+
   useEffect(() => {setActiveView("Tasks");}, []);
+
+  // 预加载所有组件
   useEffect(() => {
-    const activeConfig = configs.find(config => config.id === activeView);
-    if (activeConfig) {
-      const Component = lazy(() => {
-        // @vite-ignore
-        return import(`./components/${activeConfig.id}/${activeConfig.Component}.tsx`)
-          .then(module => ({ default: module.default || module }));
-      });
-      setActivePage(() => Component);
-    }
-  }, [activeView, configs]);
+    configs.forEach(config => {
+      if (!loadedComponents[config.id]) {
+        const Component = lazy(() => {
+          // @vite-ignore
+          return import(`./components/${config.id}/${config.Component}.tsx`)
+            .then(module => ({ default: module.default || module }));
+        });
+        setLoadedComponents(prev => ({
+          ...prev,
+          [config.id]: Component
+        }));
+      }
+    });
+  }, [configs]);
   // const toggleDarkmode = () => {
   //   const newMode = colorMode === 'dark' ? 'light' : 'dark';
   //   setMode(newMode);
@@ -39,7 +46,11 @@ const App: React.FC = () => {
         onViewChange={setActiveView}
       />
       <Suspense fallback={<div>Loading page...</div>}>
-        <ActivePage />
+        {Object.entries(loadedComponents).map(([id, Component]) => (
+          <Box key={id} sx={{ display: id === activeView ? 'flex' : 'none', flexGrow: 1 }}>
+            <Component />
+          </Box>
+        ))}
       </Suspense>
     </Box>
   );

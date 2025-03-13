@@ -10,6 +10,12 @@ export enum StatusColor {
     STUCK = 'red',
 }
 
+export enum TimeSelector {
+    TODAY = 'TODAY',
+    TOMORROW = 'TOMORROW',
+    THIS_WEEK = 'THIS_WEEK',
+}
+
 export enum Subject {
     MATH = 'MATH',
     ENGLISH = 'ENGLISH',
