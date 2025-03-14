@@ -104,9 +104,11 @@ export default function ChatPage() {
         if (done) break;
 
         const chunk = decoder.decode(value);
+        console.log("Chunk:", chunk); // debugging
         const lines = chunk.split("\n");
+        console.log("Lines:", lines); // debugging
         const contentLines = lines
-          // .filter((line) => line.startsWith("data: "))
+         // .filter((line) => line.startsWith("data: "))
           // .map((line) => {
           //   try {
           //     // parse json encoded data
@@ -115,14 +117,19 @@ export default function ChatPage() {
           //     return line.slice(6);
           //   }
           // });
-        .map((lines) => {
-          try{
-            return lines+"\n";
-          } catch{
-            console.log("Error displaying");
-            return "erm";
-          }
-        });
+          .map((line) => {
+            try {
+              // If line is empty, return a newline character
+              if (line.trim() === '') {
+                return '\n\n \n';
+              }
+              return line;
+            } catch {
+              console.log("Error processing line");
+              return '';
+            }
+          })
+          .filter(line => line !== undefined); // Remove any undefined entries
 
         assistantMessage += contentLines.join("");
         setMessages((prevMessages) => {
