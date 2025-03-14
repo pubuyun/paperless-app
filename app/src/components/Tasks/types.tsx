@@ -24,11 +24,26 @@ export enum Subject {
     CHEMISTRY = 'CHEMISTRY',
     BIOLOGY = 'BIOLOGY',
     HISTORY = 'HISTORY',
-    COMPUTER_SCIENCE = 'COMPUTER SCIENCE',
+    COMPUTER_SCIENCE = 'COMPUTER_SCIENCE',
     ART = 'ART',
     MUSIC = 'MUSIC',
-    PHYSICAL_EDUCATION = 'PHYSICAL EDUCATION',
+    PHYSICAL_EDUCATION = 'PHYSICAL_EDUCATION',
     OTHER = 'OTHER',
+}
+
+export enum SubjectColor {
+    MATH = 'yellow',
+    ENGLISH = 'blue',
+    ECONOMICS = 'red',
+    PHYSICS = 'green',
+    CHEMISTRY = 'purple',
+    BIOLOGY = 'orange',
+    HISTORY = 'pink',
+    COMPUTER_SCIENCE = 'cyan',
+    ART = 'brown',
+    MUSIC = 'grey',
+    PHYSICAL_EDUCATION = 'teal',
+    OTHER = 'black',
 }
 
 export interface Task {

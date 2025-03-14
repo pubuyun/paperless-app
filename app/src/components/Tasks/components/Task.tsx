@@ -5,9 +5,8 @@ import InfoIcon from '@mui/icons-material/Info';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import LinearProgress from '@mui/joy/LinearProgress';
 import TaskActionButton from './TaskActionButton';
-import { Task, StatusColor } from '../types';
+import { Task, StatusColor, SubjectColor } from '../types';
 import { Typography, Box } from '@mui/material';
-import { width } from '@mui/system';
 
 interface TaskProps {
     task: Task;
@@ -39,7 +38,7 @@ function TaskComponent({ task }: TaskProps) {
                         <CircleIcon style={{ color: StatusColor[task.status] }} />
                     </Grid>
                     <Grid xs={7}>
-                        <Typography noWrap>{task.title}</Typography>
+                        <Typography noWrap color={SubjectColor[task.subject]}>{task.title}</Typography>
                     </Grid>
                     <Grid xs={4}>
                         <Typography fontSize={13}>{formatDate(task.endDateTime)}</Typography>
