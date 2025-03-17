@@ -17,8 +17,8 @@ function TodoMain() {
         status: 'NOT_STARTED',
         done: false,
         subject: 'MATH',
-        startDateTime: new Date('2022-01-01T09:00:00'),
-        endDateTime: new Date('2026-01-01T10:00:00'),
+        startDateTime: new Date('2025-01-01T09:00:00'),
+        endDateTime: new Date('2025-01-01T10:00:00'),
         url: 'https://example.com'
     },
     {
@@ -27,8 +27,8 @@ function TodoMain() {
         status: 'IN_PROGRESS',
         done: false,
         subject: 'ENGLISH',
-        startDateTime: new Date('2022-01-01T10:00:00'),
-        endDateTime: new Date('2026-01-01T12:00:00'),
+        startDateTime: new Date('2025-01-01T10:00:00'),
+        endDateTime: new Date('2025-01-01T12:00:00'),
         url: 'https://example.com'
     },
     {
@@ -37,8 +37,8 @@ function TodoMain() {
         status: 'STUCK',
         done: false,
         subject: 'PHYSICS',
-        startDateTime: new Date('2022-01-01T12:00:00'),
-        endDateTime: new Date('2025-03-14T14:00:00'),
+        startDateTime: new Date('2025-01-01T12:00:00'),
+        endDateTime: new Date('2025-03-17T14:00:00'),
         url: 'https://example.com'
     },
 ] as Task[];

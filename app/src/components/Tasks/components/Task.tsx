@@ -35,7 +35,7 @@ function TaskComponent({ task }: TaskProps) {
             }}>
                 <Grid container spacing={2} alignItems="center">
                     <Grid xs={1}>
-                        <CircleIcon style={{ color: StatusColor[task.status] }} />
+                        <CircleIcon style={{ color: SubjectColor[task.subject] }} />
                     </Grid>
                     <Grid xs={7}>
                         <Typography noWrap color={SubjectColor[task.subject]}>{task.title}</Typography>
@@ -44,7 +44,7 @@ function TaskComponent({ task }: TaskProps) {
                         <Typography fontSize={13}>{formatDate(task.endDateTime)}</Typography>
                     </Grid>
                     <Grid xs={12}>
-                        <LinearProgress determinate value={Math.min(Math.max(progress, 0), 100)} />
+                        <LinearProgress determinate value={Math.min(Math.max(progress, 0), 100)} sx={{color:StatusColor[task.status]}} />
                     </Grid>
                 </Grid>
             </Box>

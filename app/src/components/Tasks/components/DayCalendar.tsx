@@ -18,9 +18,11 @@ function DayCalendar(props: DayCalendarProps) {
         <Box sx={{ display: 'flex', flexDirection: 'column', backgroundColor: "#eeeeeecc", padding: 4, borderRadius: 5, maxWidth: "30vw" }}>
             <DateSelector DateSelected={DateSelected} setDateSelected={setDateSelected} />
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, padding: 2 }}>
-                {tasks.map(task => (
-                    <AssignmentCard task={task} key={task.id} />
-                ))}
+                {tasks.map(task => {
+                    const date = DateSelected < 0 ? subDays(new Date(), Math.abs(DateSelected)) : addDays(new Date(), DateSelected);
+                    if (task.endDateTime.getDate() !== date.getDate()) return null;
+                    return <AssignmentCard task={task} key={task.id} />
+                })}
             </Box>
         </Box>
     );
