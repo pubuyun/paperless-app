@@ -25,9 +25,15 @@ export const Message = ({ message }: { message: MessageType }) => (
       }}
     >
       {/* <MessageContent message={message} /> */}
-      {/* <Typography variant="body1" sx={{ color: "inherit", lineHeight: 3 }}>
+      {/* <Typography variant="body1" sx={{ 
+          color: "inherit",
+          lineHeight: 1.5,
+          whiteSpace: "pre-wrap"
+        }}>
         {message.content}
-      </Typography> */}
+      </Typography>
+       */}
+      <MessageContent message={message} />
       {message.role === "assistant" && (
         <Box
           className="message-footer"

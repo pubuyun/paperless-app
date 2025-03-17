@@ -15,7 +15,7 @@ def getApiKey():
     """
     gets api key from apiKey.config, starts with main:
     """
-    with open("api/apiKey.config") as f:
+    with open("apiKey.config") as f:
         api_key = next(
             (line[5:].strip() for line in f.readlines() if line.startswith("main:")),
             None,
@@ -29,7 +29,7 @@ def getBaseUrl():
     """
     gets base url from apiKey.config, starts with base-url:
     """
-    with open("api/apiKey.config") as f:
+    with open("apiKey.config") as f:
         baseUrl = next(
             (
                 line[9:].strip()
@@ -258,13 +258,9 @@ def main():
 
     generatePrompt = False
     generatePromptPreText = """
-                            i need help with my gothic story writing, fixing stuff, making stuff better, adding new stuff, making current stuff more effective , and the story more engaging.
-                            it is a short gothic story talking about a new law firm hire that is presented with a task that is unethical. and this task was abnormally assigned to him in 2015, and the story is in 2025. all the other people did this stuff when they joined too. you haed into the mansion of the client and observe weird stuff that happened to the people that defied him and he asks you to do some dirty work, you think of orientation witnessing all those weird stuff and now this. 
-                            I need to fix the following things. but please keep portions of what i wrote.
-                            i want the story to feel uncomfortable, strange, and you are always being commanded and forced to climb the coporate ladder and help the clients.
-                            i ened to fix  the storyline, it is a bit messy. then what the character you is doing is not that clear, the mainsoin part can be shorter but more dense. the haunting and abnormal stuff can be clearer
+                           
                             """
-    userPrompting = False
+    userPrompting = True
 
     # you should always use R1 for generating prompts that require good formatting and examples ex.marking/giving feedback.
     # you should use 4omini for generating prompts that are more general and you need to follow the constraints
@@ -291,6 +287,5 @@ def main():
 
 if __name__ == "__main__":
     import uvicorn
-
     uvicorn.run(app, host="0.0.0.0", port=8000)
     # main()
