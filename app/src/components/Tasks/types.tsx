@@ -2,15 +2,18 @@ export enum TaskStatus {
     NOT_STARTED = 'NOT_STARTED',
     IN_PROGRESS = 'IN_PROGRESS',
     STUCK = 'STUCK',
+    DONE = 'DONE',
 }   
 
 export enum StatusColor {
     NOT_STARTED = 'yellow',
     IN_PROGRESS = 'blue',
     STUCK = 'red',
+    DONE = 'green',
 }
 
 export enum TimeSelector {
+    PAST_DUE = 'PAST_DUE',
     TODAY = 'TODAY',
     TOMORROW = 'TOMORROW',
     THIS_WEEK = 'THIS_WEEK',
@@ -29,6 +32,7 @@ export enum Subject {
     MUSIC = 'MUSIC',
     PHYSICAL_EDUCATION = 'PHYSICAL_EDUCATION',
     OTHER = 'OTHER',
+    ALL = 'ALL',
 }
 
 export enum SubjectColor {
@@ -41,18 +45,18 @@ export enum SubjectColor {
     HISTORY = 'pink',
     COMPUTER_SCIENCE = 'cyan',
     ART = 'brown',
-    MUSIC = 'grey',
+    MUSIC = 'lime',
     PHYSICAL_EDUCATION = 'teal',
     OTHER = 'black',
+    ALL = 'grey',
 }
 
 export interface Task {
     id: number;
     title: string;
     status: TaskStatus;
-    done: boolean;
     subject: Subject;
     startDateTime: Date;
     endDateTime: Date;
-    url: string;
+    url?: string;
 }

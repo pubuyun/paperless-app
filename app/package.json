@@ -21,6 +21,7 @@
     "@mui/lab": "^6.0.0-beta.27",
     "@mui/material": "^6.4.3",
     "@mui/system": "^5.16.14",
+    "@mui/x-date-pickers": "^7.28.0",
     "@mui/x-tree-view": "^7.26.0",
     "@mui/x-tree-view-pro": "^7.26.0",
     "@react-spring/web": "^9.7.5",
@@ -29,6 +30,7 @@
     "electron-store": "^10.0.1",
     "element-internals-polyfill": "^0.1.49",
     "react": "^18.2.0",
+    "react-beautiful-dnd": "^13.1.1",
     "react-dom": "^18.2.0",
     "supports-color": "^9.4.0"
   },

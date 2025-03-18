@@ -1,5 +1,5 @@
 import { Button, Box } from "@mui/material";
-import { TaskStatus } from "../types";
+import { TaskStatus } from "../../types";
 
 interface SelectButtonsProps {
     Selected: TaskStatus | "ALL";
@@ -14,10 +14,11 @@ function SelectButtons(SelectButtonsProps: SelectButtonsProps) {
     }
     return (
         <Box>
-            <Button sx={ButtonStyle} color="success" variant={Selected === 'ALL' ? 'contained' : 'outlined'} onClick={() => setSelected("ALL")}>ALL</Button>
+            <Button sx={ButtonStyle} color="primary" variant={Selected === 'ALL' ? 'contained' : 'outlined'} onClick={() => setSelected("ALL")}>ALL</Button>
             <Button sx={ButtonStyle} color="warning" variant={Selected === 'NOT_STARTED' ? 'contained' : 'outlined'} onClick={() => setSelected(TaskStatus.NOT_STARTED)}>Not Started</Button>
             <Button sx={ButtonStyle} color="info" variant={Selected === 'IN_PROGRESS' ? 'contained' : 'outlined'} onClick={() => setSelected(TaskStatus.IN_PROGRESS)}>In Progress</Button>
             <Button sx={ButtonStyle} color="error" variant={Selected === 'STUCK' ? 'contained' : 'outlined'} onClick={() => setSelected(TaskStatus.STUCK)}>Stuck</Button>
+            <Button sx={ButtonStyle} color="success" variant={Selected === 'DONE' ? 'contained' : 'outlined'} onClick={() => setSelected(TaskStatus.DONE)}>DONE</Button>
         </Box>
     );
 }

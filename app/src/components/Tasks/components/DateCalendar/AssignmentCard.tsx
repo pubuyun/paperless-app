@@ -1,4 +1,4 @@
-import { Task, SubjectColor } from '../types';
+import { Task, SubjectColor } from '../../types';
 import React from 'react';
 import Box from '@mui/material/Box';
 import { Typography } from '@mui/material';
@@ -27,7 +27,7 @@ function AssignmentCard(props: AssignmentCardProps) {
              }}>
                 <Typography variant="h6" fontSize="20px">{task.title}</Typography>
                 <Typography variant="body2" fontSize="14px">
-                    Due <b>{new Date(task.endDateTime).toLocaleDateString('en-US', { weekday: 'short' })}</b> on <b>{new Date(task.endDateTime).toLocaleDateString('en-US', { month: 'numeric', day: 'numeric' })}</b>
+                    Due on <b>{new Date(task.endDateTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</b>
                 </Typography>
             </Box>
         </Box>

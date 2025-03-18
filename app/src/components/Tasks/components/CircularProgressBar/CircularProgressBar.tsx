@@ -33,7 +33,7 @@ function CircularProgressBar(props: CircularProgressBarProps) {
         );
     }
     return (
-<Box sx={{ display: 'flex', alignItems: 'center', backgroundColor: "#eeeeeecc", padding: 4, borderRadius: 5, maxWidth: "30vw"  }} >
+<Box sx={{ display: 'flex', alignItems: 'center', backgroundColor: "#eeeeeecc", padding: 4, borderRadius: 5, maxWidth: "35vw"  }} >
             <Box display="flex" justifyContent="center" alignItems="center">
                 {recursiveShowCircle(0)}
             </Box>

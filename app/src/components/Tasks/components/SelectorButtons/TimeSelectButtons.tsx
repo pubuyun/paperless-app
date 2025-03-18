@@ -1,6 +1,6 @@
 import { Button, Box } from "@mui/material";
-import { TaskStatus, TimeSelector } from "../types";
-import { Star, Event, DateRange } from "@mui/icons-material";
+import { TaskStatus, TimeSelector } from "../../types";
+import { Star, Event, DateRange, AccessTime } from "@mui/icons-material";
 
 interface TimeSelectButtonsProps {
     TimeSelected: TimeSelector | null;
@@ -10,14 +10,14 @@ interface TimeSelectButtonsProps {
 function TimeSelectButtons(TimeSelectButtonsProps: TimeSelectButtonsProps) {
     const { TimeSelected, setTimeSelected } = TimeSelectButtonsProps;
     const ButtonStyle = {
-        margin: '0.5rem',
+        margin: '0.25rem',
         borderRadius: '1rem',
     }
     return (
         <Box>
             <Button
                 variant={TimeSelected === 'TODAY' ? 'contained' : 'outlined'}
-                color="error"
+                color="warning"
                 startIcon={<Star />}
                 sx={ButtonStyle}
                 onClick={() => setTimeSelected(TimeSelected === TimeSelector.TODAY ? null : TimeSelector.TODAY)}
@@ -26,7 +26,7 @@ function TimeSelectButtons(TimeSelectButtonsProps: TimeSelectButtonsProps) {
             </Button>
             <Button
                 variant={TimeSelected === 'TOMORROW' ? 'contained' : 'outlined'}
-                color="warning"
+                color="primary"
                 startIcon={<Event />}
                 sx={ButtonStyle}
                 onClick={() => setTimeSelected(TimeSelected === TimeSelector.TOMORROW ? null : TimeSelector.TOMORROW)}
@@ -41,6 +41,15 @@ function TimeSelectButtons(TimeSelectButtonsProps: TimeSelectButtonsProps) {
                 onClick={() => setTimeSelected(TimeSelected === TimeSelector.THIS_WEEK ? null : TimeSelector.THIS_WEEK)}
             >
                 This Week
+            </Button>
+            <Button
+                variant={TimeSelected === 'PAST_DUE' ? 'contained' : 'outlined'}
+                color="error"
+                startIcon={<AccessTime />}
+                sx={ButtonStyle}
+                onClick={() => setTimeSelected(TimeSelected === TimeSelector.PAST_DUE ? null : TimeSelector.PAST_DUE)}
+            >
+                Past Due
             </Button>
         </Box>
     );
