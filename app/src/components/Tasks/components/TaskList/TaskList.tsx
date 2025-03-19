@@ -57,10 +57,10 @@ function Tasklist({ selected, timeSelected }: TasklistProps) {
     const onDragEnd = (result: DropResult) => {
         if (!result.destination) return;
         
-        const filteredTasks = tasks.filter(task => 
-            (selected === 'ALL' || task.status === selected) && 
-            matchesTimeFilter(task, timeSelected)
-        );
+    const filteredTasks = tasks.filter(task => 
+        ((selected === 'ALL' && task.status !== TaskStatus.DONE) || task.status === selected) && 
+        matchesTimeFilter(task, timeSelected)
+    );
 
         const reorderedTask = filteredTasks[result.source.index];
         const newTasks = Array.from(tasks);
@@ -74,10 +74,10 @@ function Tasklist({ selected, timeSelected }: TasklistProps) {
         setTasks(newTasks);
     };
 
-    const filteredTasks = tasks.filter(task => 
-        (selected === 'ALL' || task.status === selected) && 
-        matchesTimeFilter(task, timeSelected)
-    );
+        const filteredTasks = tasks.filter(task => 
+            ((selected === 'ALL' && task.status !== TaskStatus.DONE) || task.status === selected) && 
+            matchesTimeFilter(task, timeSelected)
+        );
 
     return (
         <DragDropContext onDragEnd={onDragEnd}>

@@ -20,6 +20,24 @@ function TaskComponent({ task }: TaskProps) {
     const tasksContext = useContext(TasksContext);
     if(!tasksContext) return null;
     const { updateTask, openWebView } = tasksContext;
+    const AnimatedDisappear = () => {
+        // Animate the task box and buttons out
+        const taskBox = document.getElementById(`task-${task.id}`);
+        const buttonsBox = document.getElementById(`buttons-${task.id}`);
+        if (taskBox && buttonsBox) {
+            taskBox.style.transform = 'translateX(100vw) rotate(10deg)';
+            taskBox.style.opacity = '0';
+            buttonsBox.style.transform = 'translateX(200vw) rotate(20deg)';
+            buttonsBox.style.opacity = '0';
+        }
+    }
+
+    const handleDone = () => {
+        AnimatedDisappear();
+        setTimeout(() => {
+            updateTask(task.id, { status: TaskStatus.DONE });
+        }, 500);
+    };
 
     const handleNextStatus = () => {
         const nextStatus = {
@@ -33,12 +51,16 @@ function TaskComponent({ task }: TaskProps) {
     
     return (
         <Box sx={{flexDirection: 'row', display: 'flex', margin: 3}}>  
-            <Box sx={{
+            <Box 
+                id={`task-${task.id}`}
+                sx={{
                 borderRadius: 1,
                 backgroundColor: 'rgba(255, 255, 255, 0.5)',
                 flexGrow: 1,
                 padding: 3,
-                transition: 'box-shadow 0.3s ease-in-out',
+                transform: 'translateX(0) rotate(0deg)',
+                opacity: 1,
+                transition: 'transform 0.5s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.5s ease-out, box-shadow 0.3s ease-in-out',
                 '&:hover': {
                     boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)'
                 }
@@ -80,15 +102,20 @@ function TaskComponent({ task }: TaskProps) {
                     </Grid>
                 </Grid>
             </Box>
-            <Box sx={{ 
-                flexDirection: 'column', 
-                display: 'flex',
-                width: '28px',
-            }}>   
+            <Box 
+                id={`buttons-${task.id}`}
+                sx={{ 
+                    flexDirection: 'column', 
+                    display: 'flex',
+                    width: '28px',
+                    transform: 'translateX(0) rotate(0deg)',
+                    opacity: 1,
+                    transition: 'transform 0.5s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.5s ease-out',
+                }}>   
                 <TaskActionButton
                     color={{ main: '#4caf50', hover: '#388e3c' }}
                     icon={<DoneIcon fontSize='small' />}
-                    onClick={() => updateTask(task.id, { status: TaskStatus.DONE })}
+                    onClick={handleDone}
                 />
                 <TaskActionButton
                     color={{ main: '#2196f3', hover: '#1976d2' }}
