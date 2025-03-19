@@ -87,7 +87,7 @@ function Tasklist({ selected, timeSelected }: TasklistProps) {
                             ref={provided.innerRef}
                             {...provided.droppableProps}
                             sx={{ 
-                                maxHeight: '85vh',
+                                maxHeight: '80vh',
                                 width: '45vw',
                                 overflowY: 'scroll',
                                 scrollbarWidth: 'none',

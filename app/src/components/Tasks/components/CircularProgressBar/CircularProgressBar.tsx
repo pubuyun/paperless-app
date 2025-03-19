@@ -4,7 +4,10 @@ import { Box } from "@mui/material";
 import React from "react";
 
 interface CircularProgressBarProps {
-    [subject: string]: number;
+    items: Array<{
+        subject: string;
+        progress: number;
+    }>;
 }
 
 function CircularProgressBar(props: CircularProgressBarProps) {
@@ -13,10 +16,10 @@ function CircularProgressBar(props: CircularProgressBarProps) {
         'success',
         'warning',
     ] as const;
+    const { items } = props;
     const recursiveShowCircle = (index: number = 0): React.ReactNode => {
-        const entries = Object.entries(props);
-        if (index >= entries.length) return null;
-        const [, progress] = entries[index];
+        if (index >= items.length) return null;
+        const { progress } = items[index];
         
         return (
             <CircularProgress
@@ -38,12 +41,12 @@ function CircularProgressBar(props: CircularProgressBarProps) {
                 {recursiveShowCircle(0)}
             </Box>
             <Box display="flex" flexDirection="column" ml={5} sx={{ flexGrow: 1 }} gap={1.5}>
-                {Object.entries(props).map(([subject, progress], index) => (
+                {items.map(({subject, progress}, index) => (
                     <Box sx={{ display: 'flex', alignItems: "center", justifyContent: "space-between" }} key={subject}>
                         {/* seperate the circle and the text in two side */}
                         
                         <Box display="flex" alignItems="center" gap={1}><Circle color={colors[index % colors.length]} /> {subject}</Box>
-                        <Box color="#bbb">{progress}%</Box>
+                        <Box color="#bbb">{progress.toFixed(1)}%</Box>
                     </Box>
                 ))} 
             </Box>

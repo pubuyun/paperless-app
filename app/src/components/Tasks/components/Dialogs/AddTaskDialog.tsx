@@ -1,10 +1,10 @@
-import { Modal, ModalDialog, Typography, FormControl, FormLabel, Input, Button, Select, Option } from "@mui/joy";
+import { Modal, ModalDialog, Typography, FormControl, FormLabel, Input, Button, Select, Option, Stack } from "@mui/joy";
 import { DateTimePicker } from "@mui/x-date-pickers";
 import { LocalizationProvider } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFnsV3';
 import { zhCN } from 'date-fns/locale/zh-CN';
 import { TasksContext } from "../../context/TasksContext";
-import { Subject, TaskStatus } from "../../types";
+import { Subject, TaskStatus, Task } from "../../types";
 import React from "react";
 import { SubjectColor } from "../../types";
 import { Circle } from "@mui/icons-material";
@@ -12,36 +12,57 @@ import { Circle } from "@mui/icons-material";
 interface AddTaskDialogProps {
     open: boolean;
     onClose: () => void;
+    task?: Task;
 }
 
 function AddTaskDialog(prop: AddTaskDialogProps) {
-    const { open, onClose } = prop;
-    const [title, setTitle] = React.useState("");
-    const [subject, setSubject] = React.useState<Subject>(Subject.OTHER);
+    const { open, onClose, task } = prop;
+    const [title, setTitle] = React.useState(task?.title ?? "");
+    const [subject, setSubject] = React.useState<Subject>(task?.subject ?? Subject.OTHER);
     const startDateTime = new Date();
-    const [endDateTime, setEndDateTime] = React.useState<Date>(new Date());
-    const [url, setUrl] = React.useState("");
+    const [endDateTime, setEndDateTime] = React.useState<Date>(task?.endDateTime ?? new Date());
+    const [url, setUrl] = React.useState(task?.url ?? "");
+
+    React.useEffect(() => {
+        if (task) {
+            setTitle(task.title);
+            setSubject(task.subject);
+            setEndDateTime(task.endDateTime);
+            setUrl(task.url ?? "");
+        }
+    }, [task]);
 
     const tasksContext = React.useContext(TasksContext);
     if(!tasksContext) return null;
-    const { addTask } = tasksContext;
+    const { addTask, updateTask, deleteTask } = tasksContext;
 
     const handleSubmit = (event: React.FormEvent) => {
         event.preventDefault();
-        addTask({
-            id: Date.now(),
-            title,
-            subject,
-            startDateTime,
-            endDateTime,
-            status: "NOT_STARTED" as TaskStatus,
-            url: url? url: undefined,
-        });
+        if (task){
+            updateTask(task.id, { title, subject, endDateTime, url });
+        } else {
+            addTask({
+                id: Date.now(),
+                title,
+                subject,
+                startDateTime,
+                endDateTime,
+                status: "NOT_STARTED" as TaskStatus,
+                url: url? url: undefined,
+            });
+        }
         // Reset form and close dialog
         setTitle("");
         setSubject(Subject.OTHER);
         setEndDateTime(new Date());
         onClose();
+    };
+
+    const handleDelete = () => {
+        if (task) {
+            deleteTask(task.id);
+            onClose();
+        }
     };
 
     return (
@@ -57,7 +78,7 @@ function AddTaskDialog(prop: AddTaskDialogProps) {
                     }}
                 >
                     <Typography id="add-task-dialog-title" component="h2" level="h4" marginBottom={2}>
-                        Add Task
+                        {task? "Edit Task": "Add Task"}
                     </Typography>
                     <form onSubmit={handleSubmit}>
                         <FormControl required sx={{ mb: 2 }}>
@@ -104,9 +125,21 @@ function AddTaskDialog(prop: AddTaskDialogProps) {
                             <FormLabel>url to task description</FormLabel>
                             <Input placeholder="Enter url" value={url} onChange={(e)=>{setUrl(e.target.value)}}/>
                         </FormControl>
-                        <Button type="submit" sx={{ width: '100%' }}>
-                            Add Task
-                        </Button>
+                        <Stack spacing={2}>
+                            <Button type="submit" sx={{ width: '100%' }}>
+                                {task ? "Save Changes" : "Add Task"}
+                            </Button>
+                            {task && (
+                                <Button 
+                                    color="danger" 
+                                    variant="solid"
+                                    onClick={handleDelete}
+                                    sx={{ width: '100%' }}
+                                >
+                                    Delete Task
+                                </Button>
+                            )}
+                        </Stack>
                     </form>
                 </ModalDialog>
             </Modal>

@@ -1,15 +1,16 @@
-import Grid from '@mui/joy/Grid';
 import CircleIcon from '@mui/icons-material/Circle';
 import DoneIcon from '@mui/icons-material/Done';
 import InfoIcon from '@mui/icons-material/Info';
+import EditIcon from '@mui/icons-material/Edit';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import LinearProgress from '@mui/joy/LinearProgress';
 import TaskActionButton from '../SelectorButtons/TaskActionButton';
 import { Task, StatusColor, SubjectColor, TaskStatus } from '../../types';
-import { Typography, Box } from '@mui/material';
+import { Typography, Box, Button } from '@mui/material';
 import { TasksContext } from '../../context/TasksContext';
 import { useContext, useState, useRef } from 'react';
 import { calculateProgress } from '../../utils/utils';
+
 
 interface TaskProps {
     task: Task;
@@ -26,7 +27,11 @@ function TaskComponent({ task, selected }: TaskProps) {
 
     const tasksContext = useContext(TasksContext);
     if(!tasksContext) return null;
-    const { updateTask, openWebView } = tasksContext;
+    const { updateTask, openWebView, openTaskEdit } = tasksContext;
+
+    const daysLeft = (task.endDateTime.getTime() - Date.now())/1000/60/60/24;
+    const piority = daysLeft < 1 ? 'error' : daysLeft < 3 ? 'warning' : 'primary';
+
     const AnimatedDisappear = () => {
         if (taskBoxRef.current && buttonsBoxRef.current) {
             taskBoxRef.current.style.transform = 'translateX(100vw) rotate(10deg)';
@@ -81,6 +86,7 @@ function TaskComponent({ task, selected }: TaskProps) {
             AnimatedProgressReload();
         }
     };
+
     
     return (
         <Box sx={{flexDirection: 'row', display: 'flex', margin: 3}}>  
@@ -98,19 +104,35 @@ function TaskComponent({ task, selected }: TaskProps) {
                     boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)'
                 }
             }}>
-                <Grid container spacing={2} alignItems="center">
-                    <Grid xs={1}>
+                <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+                    <Button 
+                        disabled
+                        color={piority}
+                        variant="contained"  
+                        sx={{ 
+                            width: 'fit-content', 
+                            height: '30px',
+                            marginBottom: 1,
+                            color: (theme) => theme.palette[piority].main,
+                            backgroundColor: (theme) => `${theme.palette[piority].main}20`,
+                            '&.Mui-disabled': {
+                                color: (theme) => theme.palette[piority].main,
+                                backgroundColor: (theme) => `${theme.palette[piority].main}20`,
+                            },
+                            '&:hover': {
+                                backgroundColor: (theme) => `${theme.palette[piority].main}20`,
+                            }
+                        }}
+                    >
+                        {new Date(task.endDateTime).toLocaleDateString('en-US', { weekday: 'short' })}
+                        {' '}
+                        {new Date(task.endDateTime).toLocaleDateString('en-US', { month: 'numeric', day: 'numeric' })}
+                    </Button>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                         <CircleIcon style={{ color: SubjectColor[task.subject] }} />
-                    </Grid>
-                    <Grid xs={7}>
                         <Typography noWrap>{task.title}</Typography>
-                    </Grid>
-                    <Grid xs={4}>
-                        <Typography fontSize={13}>
-                            Due <b>{new Date(task.endDateTime).toLocaleDateString('en-US', { weekday: 'short' })}</b> on <b>{new Date(task.endDateTime).toLocaleDateString('en-US', { month: 'numeric', day: 'numeric' })}</b>
-                        </Typography>
-                    </Grid>
-                    <Grid xs={12}>
+                    </Box>
+                    <Box sx={{ width: '100%', marginTop: 'auto' }}>
                         <LinearProgress 
                             determinate 
                             value={progress} 
@@ -132,8 +154,8 @@ function TaskComponent({ task, selected }: TaskProps) {
                                 {task.status}
                             </Typography>    
                         </LinearProgress>
-                    </Grid>
-                </Grid>
+                    </Box>
+                </Box>
             </Box>
             <Box 
                 ref={buttonsBoxRef}
@@ -159,6 +181,11 @@ function TaskComponent({ task, selected }: TaskProps) {
                     color={{ main: '#ff9800', hover: '#f57c00' }}
                     icon={<CalendarTodayIcon fontSize='small' />}
                     onClick={handleNextStatus}
+                />
+                <TaskActionButton
+                    color={{ main: '#f44336', hover: '#e53935' }}
+                    icon={<EditIcon fontSize='small' />}
+                    onClick={()=>openTaskEdit(task.id)}
                     sx={{ marginBottom: 0 }}
                 />
             </Box>

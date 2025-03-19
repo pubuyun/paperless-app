@@ -18,7 +18,7 @@ function DayCalendar() {
     return (
         <Box sx={{ display: 'flex', flexDirection: 'column', backgroundColor: "#eeeeeecc", padding: 4, borderRadius: 5, maxWidth: "35vw" }}>
             <DateSelector DateSelected={DateSelected} setDateSelected={setDateSelected} />
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, padding: 2 }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, padding: 2, maxHeight: "20vh", overflowY: "scroll", scrollbarWidth: "none" }}>
                 {(() => {
                     const date = DateSelected < 0 ? subDays(new Date(), Math.abs(DateSelected)) : addDays(new Date(), DateSelected);
                     const todayTasks = tasks.filter(task => task.endDateTime.getDate() === date.getDate());

@@ -12,6 +12,11 @@ export type TasksContextType = {
   isWebViewOpen: boolean;
   openWebView: (url: string) => void;
   closeWebView: () => void;
+  // Task编辑相关状态
+  taskEditing: Task | null;
+  isTaskEditOpen: boolean;
+  openTaskEdit: (taskId?: number) => void;
+  closeTaskEdit: () => void;
 };
 
 export const TasksContext = React.createContext<TasksContextType | undefined>(undefined);

@@ -22,6 +22,7 @@ export enum TimeSelector {
 export enum Subject {
     MATH = 'MATH',
     ENGLISH = 'ENGLISH',
+    CHINESE = 'CHINESE',
     ECONOMICS = 'ECONOMICS',
     PHYSICS = 'PHYSICS',
     CHEMISTRY = 'CHEMISTRY',
@@ -38,8 +39,9 @@ export enum Subject {
 export enum SubjectColor {
     MATH = 'yellow',
     ENGLISH = 'blue',
+    CHINESE = 'green',
     ECONOMICS = 'red',
-    PHYSICS = 'green',
+    PHYSICS = 'indigo',
     CHEMISTRY = 'purple',
     BIOLOGY = 'orange',
     HISTORY = 'pink',
