@@ -8,28 +8,62 @@ import TaskActionButton from '../SelectorButtons/TaskActionButton';
 import { Task, StatusColor, SubjectColor, TaskStatus } from '../../types';
 import { Typography, Box } from '@mui/material';
 import { TasksContext } from '../../context/TasksContext';
-import { useContext } from 'react';
+import { useContext, useState, useRef } from 'react';
 
 interface TaskProps {
     task: Task;
+    selected: TaskStatus | 'ALL';
 }
 
-function TaskComponent({ task }: TaskProps) {
-    const progress = ((new Date().getTime() - task.startDateTime.getTime()) / 
-                     (task.endDateTime.getTime() - task.startDateTime.getTime())) * 100;
+function TaskComponent({ task, selected }: TaskProps) {
+    const [progress, setProgress] = useState(
+        Math.min(
+            Math.max(
+                (((new Date().getTime() - task.startDateTime.getTime()) / 
+                (task.endDateTime.getTime() - task.startDateTime.getTime())) * 100)
+            , 0)
+        , 100)
+    );
+    const intervalRef = useRef<NodeJS.Timeout>();
+    const taskBoxRef = useRef<HTMLDivElement>(null);
+    const buttonsBoxRef = useRef<HTMLDivElement>(null);
+
     const tasksContext = useContext(TasksContext);
     if(!tasksContext) return null;
     const { updateTask, openWebView } = tasksContext;
     const AnimatedDisappear = () => {
-        // Animate the task box and buttons out
-        const taskBox = document.getElementById(`task-${task.id}`);
-        const buttonsBox = document.getElementById(`buttons-${task.id}`);
-        if (taskBox && buttonsBox) {
-            taskBox.style.transform = 'translateX(100vw) rotate(10deg)';
-            taskBox.style.opacity = '0';
-            buttonsBox.style.transform = 'translateX(200vw) rotate(20deg)';
-            buttonsBox.style.opacity = '0';
+        if (taskBoxRef.current && buttonsBoxRef.current) {
+            taskBoxRef.current.style.transform = 'translateX(100vw) rotate(10deg)';
+            taskBoxRef.current.style.opacity = '0';
+            buttonsBoxRef.current.style.transform = 'translateX(200vw) rotate(20deg)';
+            buttonsBoxRef.current.style.opacity = '0';
         }
+    }
+    const AnimatedProgressReload = () => {
+        // Clear any existing animation
+        if (intervalRef.current) {
+            clearInterval(intervalRef.current);
+        }
+
+        const originalProgress = Math.min(
+            Math.max(
+                (((new Date().getTime() - task.startDateTime.getTime()) / 
+                (task.endDateTime.getTime() - task.startDateTime.getTime())) * 100)
+            , 0)
+        , 100);
+        // Animate the progress bar reload in 0.3s
+        const step = originalProgress/(300/5);
+        setProgress(0);
+        intervalRef.current = setInterval(() => {
+            setProgress(prev => prev + step);
+        }, 5);
+        setTimeout(() => {
+            if (intervalRef.current) {
+                clearInterval(intervalRef.current);
+                intervalRef.current = undefined;
+            }
+            setProgress(originalProgress);
+        }, 300);
     }
 
     const handleDone = () => {
@@ -44,15 +78,23 @@ function TaskComponent({ task }: TaskProps) {
             [TaskStatus.NOT_STARTED]: TaskStatus.IN_PROGRESS,
             [TaskStatus.IN_PROGRESS]: TaskStatus.STUCK,
             [TaskStatus.STUCK]: TaskStatus.NOT_STARTED,
-            [TaskStatus.DONE]: TaskStatus.NOT_STARTED,
+            [TaskStatus.DONE]: TaskStatus.IN_PROGRESS,
         }[task.status];
-        updateTask(task.id, { status: nextStatus });
+        if (selected !== 'ALL'){
+            AnimatedDisappear();
+            setTimeout(() => {
+                updateTask(task.id, { status: nextStatus });
+            }, 500);
+        } else {
+            updateTask(task.id, { status: nextStatus });
+            AnimatedProgressReload();
+        }
     };
     
     return (
         <Box sx={{flexDirection: 'row', display: 'flex', margin: 3}}>  
             <Box 
-                id={`task-${task.id}`}
+                ref={taskBoxRef}
                 sx={{
                 borderRadius: 1,
                 backgroundColor: 'rgba(255, 255, 255, 0.5)',
@@ -80,7 +122,7 @@ function TaskComponent({ task }: TaskProps) {
                     <Grid xs={12}>
                         <LinearProgress 
                             determinate 
-                            value={Math.min(Math.max(progress, 0), 100)} 
+                            value={progress} 
                             sx={{ 
                                 color: StatusColor[task.status], 
                                 '--LinearProgress-radius': '12px',
@@ -103,7 +145,7 @@ function TaskComponent({ task }: TaskProps) {
                 </Grid>
             </Box>
             <Box 
-                id={`buttons-${task.id}`}
+                ref={buttonsBoxRef}
                 sx={{ 
                     flexDirection: 'column', 
                     display: 'flex',
