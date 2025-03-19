@@ -10,6 +10,7 @@ import CircularProgressBar from './components/CircularProgressBar/CircularProgre
 import DayCalendar from './components/DateCalendar/DayCalendar';
 import AddTaskDialog from './components/TaskList/AddTaskDialog';
 import WebViewDialog from './components/TaskList/WebViewDialog';
+import { calculateProgress } from './utils/utils';
 
 function TodoMain() {
     const [selected, setSelected] = React.useState<TaskStatus|"ALL">('ALL');
@@ -17,9 +18,14 @@ function TodoMain() {
     const [openAddTaskDialog, setOpenAddTaskDialog] = React.useState(false);
     const tasksContext = React.useContext(TasksContext);
     if (!tasksContext) return null;
+    const { isWebViewOpen, webViewUrl, closeWebView, tasks } = tasksContext;
 
-    const { isWebViewOpen, webViewUrl, closeWebView } = tasksContext;
+    const circularProgressBarData = {
+        // Calculate the progress of all tasks and find the average
+        ALL: tasks.reduce((acc, task) => acc + calculateProgress(task), 0) / tasks.length,
+        // find the top 2 subjects with the highest progress and display them
 
+    };
     return (
         <Box className="todo-main" sx={ { display: 'flex', flexGrow: 1, background: 'radial-gradient(circle at center, rgba(150,150,150,0.8) 0%, rgba(0,0,0,0) 70%)', } }>
             <Box sx={{ display: 'flex', flexDirection: 'column' }}>
@@ -29,7 +35,7 @@ function TodoMain() {
             <Box sx={ { display: 'flex', flexDirection: "column", gap: 2, flexGrow: 1, margin: 4} }>
                 <SelectButtons Selected={selected} setSelected={setSelected} />
                 <TimeSelectButtons TimeSelected={timeSelected} setTimeSelected={setTimeSelected} />
-                <CircularProgressBar ALL={10} MATH={50} ENGLISH={30}></CircularProgressBar>
+                <CircularProgressBar {...circularProgressBarData}></CircularProgressBar>
                 <DayCalendar />
             </Box>
             <AddTaskDialog open={openAddTaskDialog} onClose={() => setOpenAddTaskDialog(false)} />

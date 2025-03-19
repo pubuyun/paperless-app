@@ -9,6 +9,7 @@ import { Task, StatusColor, SubjectColor, TaskStatus } from '../../types';
 import { Typography, Box } from '@mui/material';
 import { TasksContext } from '../../context/TasksContext';
 import { useContext, useState, useRef } from 'react';
+import { calculateProgress } from '../../utils/utils';
 
 interface TaskProps {
     task: Task;
@@ -17,12 +18,7 @@ interface TaskProps {
 
 function TaskComponent({ task, selected }: TaskProps) {
     const [progress, setProgress] = useState(
-        Math.min(
-            Math.max(
-                (((new Date().getTime() - task.startDateTime.getTime()) / 
-                (task.endDateTime.getTime() - task.startDateTime.getTime())) * 100)
-            , 0)
-        , 100)
+        calculateProgress(task) 
     );
     const intervalRef = useRef<NodeJS.Timeout>();
     const taskBoxRef = useRef<HTMLDivElement>(null);
@@ -45,12 +41,7 @@ function TaskComponent({ task, selected }: TaskProps) {
             clearInterval(intervalRef.current);
         }
 
-        const originalProgress = Math.min(
-            Math.max(
-                (((new Date().getTime() - task.startDateTime.getTime()) / 
-                (task.endDateTime.getTime() - task.startDateTime.getTime())) * 100)
-            , 0)
-        , 100);
+        const originalProgress = calculateProgress(task);
         // Animate the progress bar reload in 0.3s
         const step = originalProgress/(300/5);
         setProgress(0);
